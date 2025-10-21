@@ -1,0 +1,34 @@
+name: announcement_scheduler
+description: A Flutter package for scheduling text-to-speech announcements with support for one-time and recurring notifications.
+version: 0.1.0
+homepage: https://github.com/koorzenb/day_break
+repository: https://github.com/koorzenb/day_break
+issue_tracker: https://github.com/koorzenb/day_break/issues
+
+environment:
+  sdk: ^3.8.1
+  flutter: '>=3.35.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_local_notifications: ^19.4.2
+  flutter_tts: ^4.0.2
+  timezone: ^0.10.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.11
+
+topics:
+  - notifications
+  - tts
+  - scheduling
+  - announcements
+  - accessibility
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
