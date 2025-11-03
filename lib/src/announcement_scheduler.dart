@@ -9,7 +9,9 @@ import 'models/announcement_exceptions.dart';
 import 'models/announcement_status.dart';
 import 'models/recurrence_pattern.dart';
 import 'models/scheduled_announcement.dart';
-import 'services/announcement_service.dart';
+import 'services/core_notification_service.dart';
+import 'services/hive_storage_service.dart';
+import 'services/scheduling_settings_service.dart';
 
 /// Main entry point for the announcement scheduler package.
 ///
@@ -81,17 +83,13 @@ import 'services/announcement_service.dart';
 /// - [AnnouncementStatus] for announcement lifecycle states
 class AnnouncementScheduler {
   final AnnouncementConfig _config;
-  final AnnouncementService _service;
-
-  /// Stream controller for announcement status updates
-  final StreamController<AnnouncementStatus> _statusController =
-      StreamController<AnnouncementStatus>.broadcast();
+  final CoreNotificationService _notificationService;
 
   AnnouncementScheduler._({
     required AnnouncementConfig config,
-    required AnnouncementService service,
+    required CoreNotificationService notificationService,
   }) : _config = config,
-       _service = service;
+       _notificationService = notificationService;
 
   /// Initialize the announcement scheduler with the given configuration.
   ///
@@ -166,11 +164,23 @@ class AnnouncementScheduler {
       }
     }
 
-    // Initialize the announcement service
-    final service = AnnouncementService();
-    await service.initialize(config);
+    // Initialize storage service
+    final storageService = await HiveStorageService.create();
 
-    return AnnouncementScheduler._(config: config, service: service);
+    // Initialize settings service
+    final settingsService = SchedulingSettingsService(storageService);
+
+    // Initialize core notification service
+    final notificationService = CoreNotificationService(
+      settingsService: settingsService,
+      config: config,
+    );
+    await notificationService.initialize();
+
+    return AnnouncementScheduler._(
+      config: config,
+      notificationService: notificationService,
+    );
   }
 
   /// Schedule an announcement with optional recurrence.
@@ -296,18 +306,13 @@ class AnnouncementScheduler {
       now,
     );
 
-    // Create scheduled announcement
-    final announcement = ScheduledAnnouncement(
-      id: id,
+    // Schedule with the notification service
+    await _notificationService.scheduleRecurringAnnouncement(
       content: content,
-      scheduledTime: nextOccurrence,
+      announcementTime: announcementTime,
       recurrence: recurrence,
       customDays: customDays,
-      metadata: metadata,
     );
-
-    // Schedule with the service
-    await _service.scheduleAnnouncement(announcement);
 
     _log('Scheduled announcement: $id at $nextOccurrence');
     return id;
@@ -385,16 +390,11 @@ class AnnouncementScheduler {
     // Generate unique ID
     final id = 'announcement_${DateTime.now().millisecondsSinceEpoch}';
 
-    // Create scheduled announcement
-    final announcement = ScheduledAnnouncement(
-      id: id,
+    // Schedule with the notification service
+    await _notificationService.scheduleOneTimeAnnouncement(
       content: content,
-      scheduledTime: dateTime,
-      metadata: metadata,
+      dateTime: dateTime,
     );
-
-    // Schedule with the service
-    await _service.scheduleAnnouncement(announcement);
 
     _log('Scheduled one-time announcement: $id at $dateTime');
     return id;
@@ -429,7 +429,7 @@ class AnnouncementScheduler {
   /// - [cancelAnnouncementById] to cancel a specific announcement
   /// - [getScheduledAnnouncements] to view currently scheduled announcements
   Future<void> cancelScheduledAnnouncements() async {
-    await _service.cancelAllScheduledAnnouncements();
+    await _notificationService.cancelAllNotifications();
     _log('Cancelled all scheduled announcements');
   }
 
@@ -463,7 +463,7 @@ class AnnouncementScheduler {
   /// - [cancelScheduledAnnouncements] to cancel all announcements
   /// - [getScheduledAnnouncements] to view currently scheduled announcements
   Future<void> cancelAnnouncementById(String id) async {
-    await _service.cancelAnnouncementById(id);
+    await _notificationService.cancelAnnouncementById(id);
     _log('Cancelled announcement: $id');
   }
 
@@ -501,7 +501,7 @@ class AnnouncementScheduler {
   /// - [ScheduledAnnouncement] for the announcement data model
   /// - [cancelAnnouncementById] to cancel specific announcements
   Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
-    return await _service.getScheduledAnnouncements();
+    return await _notificationService.getScheduledAnnouncements();
   }
 
   /// Stream of announcement status updates.
@@ -543,7 +543,8 @@ class AnnouncementScheduler {
   /// See also:
   ///
   /// - [AnnouncementStatus] for status values and their meanings
-  Stream<AnnouncementStatus> get statusStream => _statusController.stream;
+  Stream<AnnouncementStatus> get statusStream =>
+      _notificationService.statusStream;
 
   /// Dispose resources and clean up.
   ///
@@ -581,8 +582,7 @@ class AnnouncementScheduler {
   /// - [cancelScheduledAnnouncements] to cancel pending announcements
   /// - [initialize] to create a new scheduler instance
   Future<void> dispose() async {
-    await _statusController.close();
-    await _service.dispose();
+    await _notificationService.dispose();
   }
 
   /// Calculate the next occurrence based on recurrence pattern

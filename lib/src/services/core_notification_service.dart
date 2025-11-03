@@ -1,0 +1,561 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
+import '../models/announcement_config.dart';
+import '../models/announcement_exceptions.dart';
+import '../models/announcement_status.dart';
+import '../models/recurrence_pattern.dart';
+import '../models/scheduled_announcement.dart';
+import 'scheduling_settings_service.dart';
+
+/// Core notification service for the announcement scheduler package.
+///
+/// This service handles the low-level notification scheduling, TTS configuration,
+/// and announcement delivery without dependencies on specific app frameworks.
+class CoreNotificationService {
+  static const String _defaultChannelId = 'scheduled_announcements';
+  static const String _defaultChannelName = 'Scheduled Announcements';
+  static const String _defaultChannelDescription =
+      'Automated text-to-speech announcements';
+
+  // Validation constants to prevent excessive notification load (used by validation config)
+
+  final FlutterLocalNotificationsPlugin _notifications;
+  FlutterTts? _tts;
+  final SchedulingSettingsService _settingsService;
+  final AnnouncementConfig _config;
+  bool _exactAlarmsAllowed = false;
+  bool _notificationAllowed = false;
+
+  // Track active timers for unattended announcements
+  final List<Timer> _activeAnnouncementTimers = [];
+
+  // Stream controller for status updates
+  final StreamController<AnnouncementStatus> _statusController =
+      StreamController<AnnouncementStatus>.broadcast();
+
+  CoreNotificationService({
+    required SchedulingSettingsService settingsService,
+    required AnnouncementConfig config,
+    FlutterLocalNotificationsPlugin? notifications,
+    FlutterTts? tts,
+  }) : _settingsService = settingsService,
+       _config = config,
+       _notifications = notifications ?? FlutterLocalNotificationsPlugin(),
+       _tts = tts;
+
+  /// Get whether both notification permissions and exact alarms are allowed
+  bool get isNotificationsAllowed =>
+      _exactAlarmsAllowed && _notificationAllowed;
+
+  /// Stream of announcement status updates
+  Stream<AnnouncementStatus> get statusStream => _statusController.stream;
+
+  /// Initialize the notification service
+  Future<void> initialize() async {
+    // Initialize timezone data
+    tz.initializeTimeZones();
+
+    // Set timezone based on configuration
+    if (_config.forceTimezone && _config.timezoneLocation != null) {
+      tz.setLocalLocation(tz.getLocation(_config.timezoneLocation!));
+    }
+
+    await _initializeTts();
+
+    // Android initialization settings
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+
+    // iOS initialization settings
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    final initialized = await _notifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          _onBackgroundNotificationResponse,
+    );
+
+    if (initialized != true) {
+      throw const NotificationInitializationException(
+        'Failed to initialize notifications',
+      );
+    }
+
+    // Request permissions for Android 13+
+    await _requestPermissions();
+
+    // Create notification channel for Android
+    await _createNotificationChannel();
+  }
+
+  /// Schedule a one-time announcement
+  Future<void> scheduleOneTimeAnnouncement({
+    required String content,
+    required DateTime dateTime,
+  }) async {
+    try {
+      _statusController.add(AnnouncementStatus.scheduled);
+
+      tz.initializeTimeZones();
+      if (_config.forceTimezone && _config.timezoneLocation != null) {
+        tz.setLocalLocation(tz.getLocation(_config.timezoneLocation!));
+      }
+
+      final tzDateTime = tz.TZDateTime.from(dateTime, tz.local);
+
+      await _scheduleNotification(
+        notificationId: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        scheduledDate: tzDateTime,
+        content: content,
+        title: 'Scheduled Announcement',
+      );
+
+      if (_config.enableTTS) {
+        final delay = tzDateTime.difference(tz.TZDateTime.now(tz.local));
+        _scheduleUnattendedAnnouncement(content, delay);
+      }
+    } catch (e) {
+      _statusController.add(AnnouncementStatus.failed);
+      throw NotificationSchedulingException(
+        'Failed to schedule one-time announcement: $e',
+      );
+    }
+  }
+
+  /// Schedule a recurring announcement
+  Future<void> scheduleRecurringAnnouncement({
+    required String content,
+    required TimeOfDay announcementTime,
+    RecurrencePattern? recurrence,
+    List<int>? customDays,
+  }) async {
+    try {
+      _statusController.add(AnnouncementStatus.scheduled);
+
+      await cancelAllNotifications();
+
+      // Store the announcement settings
+      await _settingsService.setAnnouncementTime(
+        announcementTime.hour,
+        announcementTime.minute,
+      );
+
+      if (recurrence != null) {
+        await _settingsService.setIsRecurring(true);
+        await _settingsService.setRecurrencePattern(recurrence);
+        if (customDays != null) {
+          await _settingsService.setRecurrenceDays(customDays);
+        }
+
+        await _scheduleRecurringNotifications(
+          content: content,
+          recurrencePattern: recurrence,
+          customDays: customDays ?? recurrence.defaultDays,
+        );
+      } else {
+        await _settingsService.setIsRecurring(false);
+        await _scheduleSingleNotification(content: content);
+      }
+    } catch (e) {
+      _statusController.add(AnnouncementStatus.failed);
+      throw NotificationSchedulingException(
+        'Failed to schedule recurring announcement: $e',
+      );
+    }
+  }
+
+  /// Cancel all scheduled announcements
+  Future<void> cancelAllNotifications() async {
+    try {
+      await _notifications.cancelAll();
+
+      // Cancel all active timers
+      for (final timer in _activeAnnouncementTimers) {
+        timer.cancel();
+      }
+      _activeAnnouncementTimers.clear();
+    } catch (e) {
+      throw NotificationSchedulingException(
+        'Failed to cancel notifications: $e',
+      );
+    }
+  }
+
+  /// Cancel a specific announcement by ID
+  Future<void> cancelAnnouncementById(String id) async {
+    try {
+      final notificationId = int.tryParse(id);
+      if (notificationId != null) {
+        await _notifications.cancel(notificationId);
+      }
+    } catch (e) {
+      throw NotificationSchedulingException(
+        'Failed to cancel announcement: $e',
+      );
+    }
+  }
+
+  /// Get list of scheduled announcements
+  Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
+    try {
+      final pendingNotifications = await _notifications
+          .pendingNotificationRequests();
+
+      return pendingNotifications.map((notification) {
+        return ScheduledAnnouncement(
+          id: notification.id.toString(),
+          content: notification.body ?? '',
+          scheduledTime:
+              DateTime.now(), // This would need to be stored separately
+          isActive: true,
+        );
+      }).toList();
+    } catch (e) {
+      throw NotificationSchedulingException(
+        'Failed to get scheduled announcements: $e',
+      );
+    }
+  }
+
+  /// Dispose of resources
+  Future<void> dispose() async {
+    // Cancel all active timers
+    for (final timer in _activeAnnouncementTimers) {
+      timer.cancel();
+    }
+    _activeAnnouncementTimers.clear();
+
+    // Dispose TTS
+    await _tts?.stop();
+
+    // Close status stream
+    await _statusController.close();
+
+    // Dispose settings service
+    await _settingsService.dispose();
+  }
+
+  /// Initialize TTS with configuration
+  Future<void> _initializeTts() async {
+    if (!_config.enableTTS) return;
+
+    try {
+      _tts = FlutterTts();
+      if (_tts != null) {
+        await _tts!.setSpeechRate(_config.ttsRate);
+        await _tts!.setPitch(_config.ttsPitch);
+        await _tts!.setVolume(_config.ttsVolume);
+      }
+    } catch (e) {
+      // TTS initialization failed, but continue without it
+      _tts = null;
+    }
+  }
+
+  /// Request necessary permissions
+  Future<void> _requestPermissions() async {
+    // Request notification permission for Android 13+
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    if (androidPlugin != null) {
+      _notificationAllowed =
+          await androidPlugin.requestNotificationsPermission() ?? false;
+
+      _exactAlarmsAllowed =
+          await androidPlugin.requestExactAlarmsPermission() ?? false;
+    }
+  }
+
+  /// Create notification channel
+  Future<void> _createNotificationChannel() async {
+    const androidChannel = AndroidNotificationChannel(
+      _defaultChannelId,
+      _defaultChannelName,
+      description: _defaultChannelDescription,
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    await androidPlugin?.createNotificationChannel(androidChannel);
+  }
+
+  /// Schedule a single notification
+  Future<void> _scheduleSingleNotification({required String content}) async {
+    final hour = await _settingsService.getAnnouncementHour();
+    final minute = await _settingsService.getAnnouncementMinute();
+
+    if (hour == null || minute == null) {
+      throw const NotificationSchedulingException('Announcement time not set');
+    }
+
+    tz.initializeTimeZones();
+    if (_config.forceTimezone && _config.timezoneLocation != null) {
+      tz.setLocalLocation(tz.getLocation(_config.timezoneLocation!));
+    }
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+
+    // If the scheduled time has already passed today, schedule for tomorrow
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await _scheduleNotification(
+      notificationId: 0,
+      scheduledDate: scheduledDate,
+      content: content,
+      title: 'Scheduled Announcement',
+    );
+
+    if (_config.enableTTS) {
+      final announcementDelay = scheduledDate.difference(now);
+      _scheduleUnattendedAnnouncement(content, announcementDelay);
+    }
+  }
+
+  /// Schedule recurring notifications
+  Future<void> _scheduleRecurringNotifications({
+    required String content,
+    required RecurrencePattern recurrencePattern,
+    required List<int> customDays,
+  }) async {
+    final hour = await _settingsService.getAnnouncementHour();
+    final minute = await _settingsService.getAnnouncementMinute();
+
+    if (hour == null || minute == null) {
+      throw const NotificationSchedulingException('Announcement time not set');
+    }
+
+    // Validate recurring settings
+    await _validateRecurringSettings(recurrencePattern, customDays);
+
+    tz.initializeTimeZones();
+    if (_config.forceTimezone && _config.timezoneLocation != null) {
+      tz.setLocalLocation(tz.getLocation(_config.timezoneLocation!));
+    }
+
+    final now = tz.TZDateTime.now(tz.local);
+    final daysToSchedule = _getRecurringDates(
+      recurrencePattern: recurrencePattern,
+      customDays: customDays,
+      startDate: now,
+      maxDays: 14, // Android system limitation
+    );
+
+    for (int i = 0; i < daysToSchedule.length; i++) {
+      final scheduledDate = daysToSchedule[i];
+      await _scheduleNotification(
+        notificationId: i,
+        scheduledDate: scheduledDate,
+        content: content,
+        title: 'Recurring Announcement',
+      );
+
+      if (_config.enableTTS && i == 0) {
+        // Only schedule TTS for the next occurrence
+        final announcementDelay = scheduledDate.difference(now);
+        _scheduleUnattendedAnnouncement(content, announcementDelay);
+      }
+    }
+  }
+
+  /// Schedule a notification with the platform-specific implementation
+  Future<void> _scheduleNotification({
+    required int notificationId,
+    required tz.TZDateTime scheduledDate,
+    required String content,
+    required String title,
+  }) async {
+    final androidDetails = AndroidNotificationDetails(
+      _config.notificationConfig.channelId,
+      _config.notificationConfig.channelName,
+      channelDescription: _config.notificationConfig.channelDescription,
+      importance: _config.notificationConfig.importance,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      visibility: NotificationVisibility.public,
+      category: AndroidNotificationCategory.alarm,
+      fullScreenIntent: true,
+      showWhen: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    final platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.zonedSchedule(
+      notificationId,
+      title,
+      content,
+      scheduledDate,
+      platformDetails,
+      androidScheduleMode: _exactAlarmsAllowed
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  /// Schedule unattended TTS announcement
+  void _scheduleUnattendedAnnouncement(String content, Duration delay) {
+    if (!_config.enableTTS || _tts == null) return;
+
+    final timer = Timer(delay, () async {
+      try {
+        _statusController.add(AnnouncementStatus.delivering);
+        await _tts!.speak(content);
+        _statusController.add(AnnouncementStatus.completed);
+      } catch (e) {
+        _statusController.add(AnnouncementStatus.failed);
+      }
+    });
+
+    _activeAnnouncementTimers.add(timer);
+  }
+
+  /// Validate recurring settings to prevent excessive notifications
+  Future<void> _validateRecurringSettings(
+    RecurrencePattern pattern,
+    List<int> customDays,
+  ) async {
+    if (_config.validationConfig.enableEdgeCaseValidation) {
+      // Validate pattern-specific constraints
+      switch (pattern) {
+        case RecurrencePattern.custom:
+          if (customDays.isEmpty) {
+            throw const ValidationException(
+              'Custom recurrence pattern requires at least one day to be selected',
+            );
+          }
+          if (customDays.length > 7) {
+            throw const ValidationException(
+              'Custom recurrence pattern cannot have more than 7 days',
+            );
+          }
+          break;
+        case RecurrencePattern.daily:
+          // Daily is always valid, but check against max notifications
+          if (_config.validationConfig.maxNotificationsPerDay < 1) {
+            throw const ValidationException(
+              'Daily notifications require at least 1 notification per day',
+            );
+          }
+          break;
+        default:
+          // Other patterns are generally safe
+          break;
+      }
+    }
+  }
+
+  /// Get list of dates for recurring notifications
+  List<tz.TZDateTime> _getRecurringDates({
+    required RecurrencePattern recurrencePattern,
+    required List<int> customDays,
+    required tz.TZDateTime startDate,
+    required int maxDays,
+  }) {
+    final List<tz.TZDateTime> dates = [];
+    final hour = startDate.hour;
+    final minute = startDate.minute;
+
+    for (int dayOffset = 0; dayOffset < maxDays; dayOffset++) {
+      final candidateDate = startDate.add(Duration(days: dayOffset));
+      final scheduledDateTime = tz.TZDateTime(
+        tz.local,
+        candidateDate.year,
+        candidateDate.month,
+        candidateDate.day,
+        hour,
+        minute,
+      );
+
+      // Skip if the time has already passed today
+      if (dayOffset == 0 && scheduledDateTime.isBefore(startDate)) {
+        continue;
+      }
+
+      // Check if this day matches the recurrence pattern
+      final dayOfWeek = candidateDate.weekday; // 1=Monday, 7=Sunday
+      final List<int> targetDays;
+
+      switch (recurrencePattern) {
+        case RecurrencePattern.daily:
+          targetDays = [1, 2, 3, 4, 5, 6, 7];
+          break;
+        case RecurrencePattern.weekdays:
+          targetDays = [1, 2, 3, 4, 5];
+          break;
+        case RecurrencePattern.weekends:
+          targetDays = [6, 7];
+          break;
+        case RecurrencePattern.custom:
+          targetDays = customDays;
+          break;
+      }
+
+      if (targetDays.contains(dayOfWeek)) {
+        dates.add(scheduledDateTime);
+      }
+    }
+
+    return dates;
+  }
+
+  /// Handle notification response
+  void _onNotificationResponse(NotificationResponse response) {
+    if (_config.enableTTS && _tts != null) {
+      // Trigger TTS for notification content
+      final payload = response.payload ?? response.actionId ?? '';
+      if (payload.isNotEmpty) {
+        _tts!.speak(payload);
+      }
+    }
+  }
+
+  /// Handle background notification response
+  static void _onBackgroundNotificationResponse(NotificationResponse response) {
+    // Background processing if needed
+  }
+}

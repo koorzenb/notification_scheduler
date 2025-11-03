@@ -55,7 +55,10 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
             channelName: 'Example Announcements',
             channelDescription: 'Example scheduled announcements',
           ),
-          validationConfig: const ValidationConfig(maxNotificationsPerDay: 5, maxScheduledNotifications: 20),
+          validationConfig: const ValidationConfig(
+            maxNotificationsPerDay: 5,
+            maxScheduledNotifications: 20,
+          ),
         ),
       );
 
@@ -94,7 +97,8 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
 
       // Schedule a one-time reminder
       final oneTimeId = await _scheduler!.scheduleOneTimeAnnouncement(
-        content: 'This is a one-time announcement scheduled for 2 minutes from now.',
+        content:
+            'This is a one-time announcement scheduled for 2 minutes from now.',
         dateTime: DateTime.now().add(const Duration(minutes: 2)),
         metadata: {'type': 'reminder', 'category': 'test'},
       );
@@ -104,13 +108,21 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Example announcements scheduled successfully!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Example announcements scheduled successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to schedule announcements: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to schedule announcements: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -125,11 +137,21 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All announcements cancelled!'), backgroundColor: Colors.orange));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('All announcements cancelled!'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to cancel announcements: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to cancel announcements: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -156,30 +178,53 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                         final announcement = announcements[index];
                         return Card(
                           child: ListTile(
-                            title: Text(announcement.content, maxLines: 2, overflow: TextOverflow.ellipsis),
+                            title: Text(
+                              announcement.content,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('ID: ${announcement.id}'),
                                 Text('Time: ${announcement.scheduledTime}'),
-                                if (announcement.isRecurring) Text('Recurs: ${announcement.recurrence?.displayName}'),
+                                if (announcement.isRecurring)
+                                  Text(
+                                    'Recurs: ${announcement.recurrence?.displayName}',
+                                  ),
                               ],
                             ),
                             trailing: announcement.isActive
-                                ? const Icon(Icons.schedule, color: Colors.green)
-                                : const Icon(Icons.schedule_send, color: Colors.grey),
+                                ? const Icon(
+                                    Icons.schedule,
+                                    color: Colors.green,
+                                  )
+                                : const Icon(
+                                    Icons.schedule_send,
+                                    color: Colors.grey,
+                                  ),
                           ),
                         );
                       },
                     ),
             ),
-            actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load announcements: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load announcements: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -187,12 +232,19 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Announcement Scheduler Example'), backgroundColor: Theme.of(context).colorScheme.inversePrimary),
+      appBar: AppBar(
+        title: const Text('Announcement Scheduler Example'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
       body: _isInitializing
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Initializing announcement scheduler...')],
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Initializing announcement scheduler...'),
+                ],
               ),
             )
           : Padding(
@@ -206,9 +258,17 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Announcement Scheduler Example', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Announcement Scheduler Example',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           SizedBox(height: 8),
-                          Text('This example demonstrates the announcement_scheduler package capabilities:'),
+                          Text(
+                            'This example demonstrates the announcement_scheduler package capabilities:',
+                          ),
                           SizedBox(height: 8),
                           Text('• Daily morning motivation at 8:00 AM'),
                           Text('• Weekday work reminders at 9:30 AM'),
@@ -221,24 +281,38 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton.icon(
-                    onPressed: _scheduler == null ? null : _scheduleExampleAnnouncements,
+                    onPressed: _scheduler == null
+                        ? null
+                        : _scheduleExampleAnnouncements,
                     icon: const Icon(Icons.schedule),
                     label: const Text('Schedule Example Announcements'),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: _scheduler == null ? null : _showScheduledAnnouncements,
+                    onPressed: _scheduler == null
+                        ? null
+                        : _showScheduledAnnouncements,
                     icon: const Icon(Icons.list),
                     label: const Text('View Scheduled Announcements'),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: _scheduler == null ? null : _cancelAllAnnouncements,
+                    onPressed: _scheduler == null
+                        ? null
+                        : _cancelAllAnnouncements,
                     icon: const Icon(Icons.cancel),
                     label: const Text('Cancel All Announcements'),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Card(
@@ -248,10 +322,20 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Status', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Status',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          Text('Scheduler initialized: ${_scheduler != null ? "✅" : "❌"}'),
-                          Text('Scheduled announcements: ${_scheduledAnnouncements.length}'),
+                          Text(
+                            'Scheduler initialized: ${_scheduler != null ? "✅" : "❌"}',
+                          ),
+                          Text(
+                            'Scheduled announcements: ${_scheduledAnnouncements.length}',
+                          ),
                         ],
                       ),
                     ),

@@ -1,5 +1,6 @@
 name: announcement_scheduler
 description: A Flutter package for scheduling text-to-speech announcements with support for one-time and recurring notifications.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 0.1.0
 homepage: https://github.com/koorzenb/day_break
 repository: https://github.com/koorzenb/day_break
@@ -15,6 +16,7 @@ dependencies:
   flutter_local_notifications: ^19.4.2
   flutter_tts: ^4.0.2
   timezone: ^0.10.1
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
