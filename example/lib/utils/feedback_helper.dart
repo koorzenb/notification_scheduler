@@ -8,25 +8,34 @@ class FeedbackHelper {
   static void showSuccess(BuildContext context, String message) {
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.green));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
   }
 
   /// Show an error message
   static void showError(BuildContext context, String message) {
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   /// Show a warning message
   static void showWarning(BuildContext context, String message) {
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.orange));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.orange),
+    );
   }
 
   /// Show a dialog with scheduled announcements
-  static Future<void> showScheduledAnnouncementsDialog(BuildContext context, List<ScheduledAnnouncement> announcements) async {
+  static Future<void> showScheduledAnnouncementsDialog(
+    BuildContext context,
+    List<ScheduledAnnouncement> announcements,
+  ) async {
     if (!context.mounted) return;
 
     await showDialog(
@@ -44,22 +53,39 @@ class FeedbackHelper {
                     final announcement = announcements[index];
                     return Card(
                       child: ListTile(
-                        title: Text(announcement.content, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        title: Text(
+                          announcement.content,
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('ID: ${announcement.id}'),
-                            Text('Scheduled Time: ${_formatDateTime(announcement.scheduledTime)}'),
-                            if (announcement.isRecurring) Text('Recurs: ${announcement.recurrence}'),
+                            Text(
+                              'Scheduled Time: ${_formatDateTime(announcement.scheduledTime)}',
+                            ),
+                            if (announcement.isRecurring)
+                              Text('Recurs: ${announcement.recurrence}'),
                           ],
                         ),
-                        trailing: announcement.isActive ? const Icon(Icons.schedule, color: Colors.green) : const Icon(Icons.schedule_send, color: Colors.grey),
+                        trailing: announcement.isActive
+                            ? const Icon(Icons.schedule, color: Colors.green)
+                            : const Icon(
+                                Icons.schedule_send,
+                                color: Colors.grey,
+                              ),
                       ),
                     );
                   },
                 ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
@@ -82,7 +108,20 @@ class FeedbackHelper {
     }
 
     // Format: Nov 5, 2025 14:30
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     final month = months[dt.month - 1];
     final day = dt.day;
     final year = dt.year;

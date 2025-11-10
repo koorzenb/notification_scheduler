@@ -1,5 +1,4 @@
 import 'package:announcement_scheduler/announcement_scheduler.dart';
-import 'package:flutter/material.dart';
 
 /// Service class that encapsulates all AnnouncementScheduler operations
 /// Follows the Service/Repository pattern to separate data access from UI
@@ -24,7 +23,10 @@ class AnnouncementService {
           channelName: 'Example Announcements',
           channelDescription: 'Example scheduled announcements',
         ),
-        validationConfig: const ValidationConfig(maxNotificationsPerDay: 5, maxScheduledNotifications: 20),
+        validationConfig: const ValidationConfig(
+          maxNotificationsPerDay: 5,
+          maxScheduledNotifications: 20,
+        ),
       ),
     );
   }
@@ -37,28 +39,29 @@ class AnnouncementService {
 
     final ids = <String>[];
 
-    // Schedule a daily morning motivation
-    final dailyId = await _scheduler!.scheduleAnnouncement(
-      content: 'Good morning! Time to start your day with positive energy!',
-      announcementTime: const TimeOfDay(hour: 8, minute: 0),
-      recurrence: RecurrencePattern.daily,
-      metadata: {'type': 'motivation', 'category': 'morning'},
-    );
-    ids.add(dailyId);
+    // // Schedule a daily morning motivation
+    // final dailyId = await _scheduler!.scheduleAnnouncement(
+    //   content: 'Good morning! Time to start your day with positive energy!',
+    //   announcementTime: const TimeOfDay(hour: 8, minute: 0),
+    //   recurrence: RecurrencePattern.daily,
+    //   metadata: {'type': 'motivation', 'category': 'morning'},
+    // );
+    // ids.add(dailyId);
 
-    // Schedule a weekday work reminder
-    final weekdayId = await _scheduler!.scheduleAnnouncement(
-      content: 'Don\'t forget to review your daily goals and priorities.',
-      announcementTime: const TimeOfDay(hour: 9, minute: 30),
-      recurrence: RecurrencePattern.weekdays,
-      metadata: {'type': 'productivity', 'category': 'work'},
-    );
-    ids.add(weekdayId);
+    // // Schedule a weekday work reminder
+    // final weekdayId = await _scheduler!.scheduleAnnouncement(
+    //   content: 'Don\'t forget to review your daily goals and priorities.',
+    //   announcementTime: const TimeOfDay(hour: 9, minute: 30),
+    //   recurrence: RecurrencePattern.weekdays,
+    //   metadata: {'type': 'productivity', 'category': 'work'},
+    // );
+    // ids.add(weekdayId);
 
     // Schedule a one-time reminder
     final oneTimeId = await _scheduler!.scheduleOneTimeAnnouncement(
-      content: 'This is a one-time announcement scheduled for 2 minutes from now.',
-      dateTime: DateTime.now().add(const Duration(minutes: 2)),
+      content:
+          'This is a one-time announcement scheduled for 5 seconds from now.',
+      dateTime: DateTime.now().add(const Duration(seconds: 5)),
       metadata: {'type': 'reminder', 'category': 'test'},
     );
     ids.add(oneTimeId);
