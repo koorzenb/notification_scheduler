@@ -39,6 +39,9 @@ class CoreNotificationService {
   final StreamController<AnnouncementStatus> _statusController =
       StreamController<AnnouncementStatus>.broadcast();
 
+  // Cleanup listener subscription
+  StreamSubscription<AnnouncementStatus>? _cleanupSubscription;
+
   CoreNotificationService({
     required SchedulingSettingsService settingsService,
     required AnnouncementConfig config,
@@ -47,7 +50,10 @@ class CoreNotificationService {
   }) : _settingsService = settingsService,
        _config = config,
        _notifications = notifications ?? FlutterLocalNotificationsPlugin(),
-       _tts = tts;
+       _tts = tts {
+    // Set up cleanup listener for completed announcements
+    _setupCleanupListener();
+  }
 
   /// Get whether both notification permissions and exact alarms are allowed
   bool get isNotificationsAllowed =>
@@ -87,7 +93,8 @@ class CoreNotificationService {
 
     final initialized = await _notifications.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: _onNotificationResponse,
+      onDidReceiveNotificationResponse: (response) =>
+          onNotificationResponse(response, _statusController, _config, _tts),
       onDidReceiveBackgroundNotificationResponse:
           _onBackgroundNotificationResponse,
     );
@@ -252,6 +259,10 @@ class CoreNotificationService {
 
   /// Dispose of resources
   Future<void> dispose() async {
+    // Cancel cleanup subscription
+    await _cleanupSubscription?.cancel();
+    _cleanupSubscription = null;
+
     // Cancel all active timers
     for (final timer in _activeAnnouncementTimers) {
       timer.cancel();
@@ -266,6 +277,65 @@ class CoreNotificationService {
 
     // Dispose settings service
     await _settingsService.dispose();
+  }
+
+  /// Set up listener for cleaning up completed announcements
+  void _setupCleanupListener() {
+    _cleanupSubscription = _statusController.stream.listen((status) {
+      if (status == AnnouncementStatus.completed) {
+        _cleanupCompletedAnnouncements();
+      }
+    });
+  }
+
+  /// Clean up completed announcements from storage
+  ///
+  /// This method reconciles the stored scheduled times with actual pending
+  /// notifications. Any notification IDs that exist in storage but are no
+  /// longer pending (i.e., have been executed) are removed from storage.
+  Future<void> _cleanupCompletedAnnouncements() async {
+    try {
+      final pendingNotifications = await _notifications
+          .pendingNotificationRequests();
+      final pendingIds = pendingNotifications
+          .map((n) => n.id.toString())
+          .toSet();
+
+      final storedTimes = await _settingsService.getScheduledTimes();
+      final idsToRemove = storedTimes.keys
+          .where((id) => !pendingIds.contains(id))
+          .toList();
+
+      if (idsToRemove.isNotEmpty) {
+        // Remove completed announcements from storage
+        for (final id in idsToRemove) {
+          storedTimes.remove(id);
+        }
+
+        // Convert back to Map<int, DateTime> for storage
+        final cleanedTimes = <int, DateTime>{};
+        for (final entry in storedTimes.entries) {
+          final intKey = int.tryParse(entry.key);
+          if (intKey != null) {
+            cleanedTimes[intKey] = DateTime.fromMillisecondsSinceEpoch(
+              entry.value,
+            );
+          }
+        }
+
+        await _settingsService.setScheduledTimes(cleanedTimes);
+
+        if (_config.enableDebugLogging) {
+          debugPrint(
+            '[CoreNotificationService] Cleaned up ${idsToRemove.length} completed announcement(s)',
+          );
+        }
+      }
+    } catch (e) {
+      if (_config.enableDebugLogging) {
+        debugPrint('[CoreNotificationService] Cleanup failed: $e');
+      }
+    }
   }
 
   /// Initialize TTS with configuration
@@ -571,18 +641,33 @@ class CoreNotificationService {
   }
 
   /// Handle notification response
-  void _onNotificationResponse(NotificationResponse response) {
-    if (_config.enableTTS && _tts != null) {
+  ///
+  /// This method is made testable by accepting dependencies as parameters.
+  /// This allows for easier unit testing without requiring a full service instance.
+  @visibleForTesting
+  void onNotificationResponse(
+    NotificationResponse response,
+    StreamController<AnnouncementStatus> statusController,
+    AnnouncementConfig config,
+    FlutterTts? tts,
+  ) {
+    // Emit completed status to trigger cleanup via listener
+    statusController.add(AnnouncementStatus.completed);
+
+    if (config.enableTTS && tts != null) {
       // Trigger TTS for notification content
       final payload = response.payload ?? response.actionId ?? '';
       if (payload.isNotEmpty) {
-        _tts!.speak(payload);
+        tts.speak(payload);
       }
     }
   }
 
   /// Handle background notification response
+  @pragma('vm:entry-point')
   static void _onBackgroundNotificationResponse(NotificationResponse response) {
     // Background processing if needed
+    // Note: Cannot emit status or trigger cleanup here as this is a static method
+    // Cleanup will happen on next app launch when pending notifications are reconciled
   }
 }
