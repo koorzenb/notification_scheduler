@@ -1,3 +1,4 @@
+import 'package:announcement_scheduler/announcement_scheduler.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
@@ -70,7 +71,7 @@ class ExamplePageController extends GetxController {
   }
 
   /// Get scheduled announcements for display
-  Future<List<dynamic>> getScheduledAnnouncements() async {
+  Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
     _errorMessage.value = null;
 
     try {

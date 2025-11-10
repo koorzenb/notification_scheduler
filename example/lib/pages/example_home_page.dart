@@ -45,15 +45,12 @@ class ExampleHomePage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Announcement Scheduler Example', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 8),
                             Text('This example demonstrates the announcement_scheduler package capabilities:'),
                             SizedBox(height: 8),
-                            Text('• Daily morning motivation at 8:00 AM'),
-                            Text('• Weekday work reminders at 9:30 AM'),
-                            Text('• One-time announcements'),
+                            Text('• Daily, weekly and one-time announcements'),
                             Text('• TTS (Text-to-Speech) integration'),
-                            Text('• Status monitoring and management'),
+                            SizedBox(height: 8),
+                            Text('Suggest starting at AnnouncementScheduler.scheduleAnnouncement()'),
                           ],
                         ),
                       ),

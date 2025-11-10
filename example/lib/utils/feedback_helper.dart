@@ -1,3 +1,4 @@
+import 'package:announcement_scheduler/announcement_scheduler.dart';
 import 'package:flutter/material.dart';
 
 /// Utility class for showing user feedback messages
@@ -25,7 +26,7 @@ class FeedbackHelper {
   }
 
   /// Show a dialog with scheduled announcements
-  static Future<void> showScheduledAnnouncementsDialog(BuildContext context, List<dynamic> announcements) async {
+  static Future<void> showScheduledAnnouncementsDialog(BuildContext context, List<ScheduledAnnouncement> announcements) async {
     if (!context.mounted) return;
 
     await showDialog(
@@ -48,7 +49,7 @@ class FeedbackHelper {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('ID: ${announcement.id}'),
-                            Text('Time: ${announcement.scheduledTime}'),
+                            Text('Scheduled Time: ${_formatDateTime(announcement.scheduledTime)}'),
                             if (announcement.isRecurring) Text('Recurs: ${announcement.recurrence}'),
                           ],
                         ),
@@ -61,5 +62,33 @@ class FeedbackHelper {
         actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
       ),
     );
+  }
+
+  /// Format DateTime to display date and time in hours:minutes format
+  static String _formatDateTime(dynamic dateTime) {
+    if (dateTime == null) return 'Not scheduled';
+
+    DateTime dt;
+    if (dateTime is DateTime) {
+      dt = dateTime;
+    } else if (dateTime is String) {
+      try {
+        dt = DateTime.parse(dateTime);
+      } catch (e) {
+        return dateTime.toString();
+      }
+    } else {
+      return dateTime.toString();
+    }
+
+    // Format: Nov 5, 2025 14:30
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final month = months[dt.month - 1];
+    final day = dt.day;
+    final year = dt.year;
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+
+    return '$month $day, $year $hour:$minute';
   }
 }
