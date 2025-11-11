@@ -340,6 +340,9 @@ class CoreNotificationService {
         debugPrint(
           '[CoreNotificationService] _cleanupCompletedAnnouncements: Pending notification IDs from system: $pendingIds',
         );
+        debugPrint(
+          '[CoreNotificationService] _cleanupCompletedAnnouncements: Number of pending: ${pendingIds.length}',
+        );
       }
 
       final storedTimes = await _settingsService.getScheduledTimes();
@@ -385,6 +388,12 @@ class CoreNotificationService {
         if (_config.enableDebugLogging) {
           debugPrint(
             '[CoreNotificationService] Cleaned up ${idsToRemove.length} completed announcement(s)',
+          );
+        }
+      } else {
+        if (_config.enableDebugLogging) {
+          debugPrint(
+            '[CoreNotificationService] No announcements to clean up (all still pending)',
           );
         }
       }
@@ -572,8 +581,9 @@ class CoreNotificationService {
       icon: '@mipmap/ic_launcher',
       visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.alarm,
-      fullScreenIntent: true,
       showWhen: true,
+      playSound: true,
+      enableVibration: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -613,6 +623,24 @@ class CoreNotificationService {
       debugPrint(
         '[CoreNotificationService] _scheduleOneTimeNotification: Successfully called zonedSchedule for ID=$notificationId',
       );
+
+      // Verify it was actually scheduled
+      final pendingNotifications = await _notifications
+          .pendingNotificationRequests();
+      final wasScheduled = pendingNotifications.any(
+        (n) => n.id == notificationId,
+      );
+      debugPrint(
+        '[CoreNotificationService] _scheduleOneTimeNotification: Verification - notification in pending list: $wasScheduled',
+      );
+      if (wasScheduled) {
+        final notification = pendingNotifications.firstWhere(
+          (n) => n.id == notificationId,
+        );
+        debugPrint(
+          '[CoreNotificationService] _scheduleOneTimeNotification: Pending notification - title: ${notification.title}, body: ${notification.body}',
+        );
+      }
     }
   }
 
@@ -641,8 +669,9 @@ class CoreNotificationService {
       icon: '@mipmap/ic_launcher',
       visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.alarm,
-      fullScreenIntent: true,
       showWhen: true,
+      playSound: true,
+      enableVibration: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -692,7 +721,6 @@ class CoreNotificationService {
       try {
         _statusController.add(AnnouncementStatus.delivering);
         await _tts!.speak(content);
-        _statusController.add(AnnouncementStatus.completed);
       } catch (e) {
         _statusController.add(AnnouncementStatus.failed);
       }
