@@ -23,7 +23,9 @@ class AnnouncementService {
     }
 
     if (status.isPermanentlyDenied) {
-      debugPrint('[AnnouncementService] Notification permission permanently denied. Opening app settings...');
+      debugPrint(
+        '[AnnouncementService] Notification permission permanently denied. Opening app settings...',
+      );
       // User has permanently denied permission, open app settings
       return false;
     }
@@ -38,7 +40,9 @@ class AnnouncementService {
     final hasPermission = await checkAndRequestNotificationPermissions();
 
     if (!hasPermission) {
-      debugPrint('[AnnouncementService] Cannot initialize scheduler - notification permission not granted');
+      debugPrint(
+        '[AnnouncementService] Cannot initialize scheduler - notification permission not granted',
+      );
       throw Exception('Notification permission not granted');
     }
 
@@ -56,7 +60,10 @@ class AnnouncementService {
           channelName: 'Example Announcements',
           channelDescription: 'Example scheduled announcements',
         ),
-        validationConfig: const ValidationConfig(maxNotificationsPerDay: 5, maxScheduledNotifications: 20),
+        validationConfig: const ValidationConfig(
+          maxNotificationsPerDay: 5,
+          maxScheduledNotifications: 20,
+        ),
       ),
     );
   }
@@ -85,7 +92,8 @@ class AnnouncementService {
 
     // Schedule a one-time reminder
     await _scheduler!.scheduleOneTimeAnnouncement(
-      content: 'This is a one-time announcement scheduled for 5 seconds from now.',
+      content:
+          'This is a one-time announcement scheduled for 5 seconds from now.',
       dateTime: DateTime.now().add(const Duration(seconds: 5)),
       metadata: {'type': 'reminder', 'category': 'test'},
     );

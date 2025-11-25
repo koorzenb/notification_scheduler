@@ -84,15 +84,28 @@ import 'services/scheduling_settings_service.dart';
 class AnnouncementScheduler {
   final AnnouncementConfig _config;
   final CoreNotificationService? _notificationService;
-  DateTime Function(TimeOfDay time, RecurrencePattern? recurrence, List<int>? customDays, DateTime from) _calculateNextOccurrence;
+  DateTime Function(
+    TimeOfDay time,
+    RecurrencePattern? recurrence,
+    List<int>? customDays,
+    DateTime from,
+  )
+  _calculateNextOccurrence;
 
   AnnouncementScheduler._({
     required AnnouncementConfig config,
     CoreNotificationService? notificationService,
-    DateTime Function(TimeOfDay time, RecurrencePattern? recurrence, List<int>? customDays, DateTime from)? calculateNextOccurrence,
+    DateTime Function(
+      TimeOfDay time,
+      RecurrencePattern? recurrence,
+      List<int>? customDays,
+      DateTime from,
+    )?
+    calculateNextOccurrence,
   }) : _config = config,
        _notificationService = notificationService,
-       _calculateNextOccurrence = calculateNextOccurrence ?? _calculateNextOccurrenceFn;
+       _calculateNextOccurrence =
+           calculateNextOccurrence ?? _calculateNextOccurrenceFn;
 
   /// Initialize the announcement scheduler with the given configuration.
   ///
@@ -155,7 +168,10 @@ class AnnouncementScheduler {
   /// - [AnnouncementConfig] for configuration details
   /// - [NotificationConfig] for notification channel settings
   /// - [ValidationConfig] for validation rules
-  static Future<AnnouncementScheduler> initialize({required AnnouncementConfig config, CoreNotificationService? notificationService}) async {
+  static Future<AnnouncementScheduler> initialize({
+    required AnnouncementConfig config,
+    CoreNotificationService? notificationService,
+  }) async {
     // Initialize timezone data
     tz.initializeTimeZones();
 
@@ -164,7 +180,9 @@ class AnnouncementScheduler {
       try {
         tz.setLocalLocation(tz.getLocation(config.timezoneLocation!));
       } catch (e) {
-        throw NotificationInitializationException('Failed to set timezone location ${config.timezoneLocation}: $e');
+        throw NotificationInitializationException(
+          'Failed to set timezone location ${config.timezoneLocation}: $e',
+        );
       }
     }
 
@@ -180,11 +198,17 @@ class AnnouncementScheduler {
       final settingsService = SchedulingSettingsService(storageService);
 
       // Initialize core notification service
-      service = CoreNotificationService(settingsService: settingsService, config: config);
+      service = CoreNotificationService(
+        settingsService: settingsService,
+        config: config,
+      );
       await service.initialize();
     }
 
-    return AnnouncementScheduler._(config: config, notificationService: service);
+    return AnnouncementScheduler._(
+      config: config,
+      notificationService: service,
+    );
   }
 
   /// Schedule an announcement with optional recurrence.
@@ -290,15 +314,24 @@ class AnnouncementScheduler {
     // Validate custom days if using custom recurrence
     if (recurrence == RecurrencePattern.custom) {
       if (customDays == null || customDays.isEmpty) {
-        throw const ValidationException('Custom days must be provided when using custom recurrence pattern');
+        throw const ValidationException(
+          'Custom days must be provided when using custom recurrence pattern',
+        );
       }
       if (customDays.any((day) => day < 1 || day > 7)) {
-        throw const ValidationException('Custom days must be between 1 (Monday) and 7 (Sunday)');
+        throw const ValidationException(
+          'Custom days must be between 1 (Monday) and 7 (Sunday)',
+        );
       }
     }
 
     // Calculate next occurrence for logging
-    final nextOccurrence = _calculateNextOccurrence(announcementTime, recurrence, customDays, currentTime);
+    final nextOccurrence = _calculateNextOccurrence(
+      announcementTime,
+      recurrence,
+      customDays,
+      currentTime,
+    );
 
     // Schedule with the notification service
     await _notificationService!.scheduleRecurringAnnouncement(
@@ -366,7 +399,11 @@ class AnnouncementScheduler {
   /// - [scheduleAnnouncement] for recurring or time-based announcements
   /// - [getScheduledAnnouncements] to view all scheduled announcements
   /// - [cancelScheduledAnnouncements] to cancel all announcements
-  Future<void> scheduleOneTimeAnnouncement({required String content, required DateTime dateTime, Map<String, dynamic>? metadata}) async {
+  Future<void> scheduleOneTimeAnnouncement({
+    required String content,
+    required DateTime dateTime,
+    Map<String, dynamic>? metadata,
+  }) async {
     // Validate content
     if (content.trim().isEmpty) {
       throw const ValidationException('Announcement content cannot be empty');
@@ -378,7 +415,10 @@ class AnnouncementScheduler {
     }
 
     // Schedule with the notification service
-    await _notificationService!.scheduleOneTimeAnnouncement(content: content, dateTime: dateTime);
+    await _notificationService!.scheduleOneTimeAnnouncement(
+      content: content,
+      dateTime: dateTime,
+    );
 
     _log('Scheduled one-time announcement at $dateTime');
   }
@@ -526,7 +566,8 @@ class AnnouncementScheduler {
   /// See also:
   ///
   /// - [AnnouncementStatus] for status values and their meanings
-  Stream<AnnouncementStatus> get statusStream => _notificationService!.statusStream;
+  Stream<AnnouncementStatus> get statusStream =>
+      _notificationService!.statusStream;
 
   /// Dispose resources and clean up.
   ///
@@ -568,9 +609,20 @@ class AnnouncementScheduler {
   }
 
   /// Calculate the next occurrence based on recurrence pattern
-  static DateTime _calculateNextOccurrenceFn(TimeOfDay time, RecurrencePattern? recurrence, List<int>? customDays, DateTime from) {
+  static DateTime _calculateNextOccurrenceFn(
+    TimeOfDay time,
+    RecurrencePattern? recurrence,
+    List<int>? customDays,
+    DateTime from,
+  ) {
     final now = from;
-    final today = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    final today = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
 
     // For one-time announcements
     if (recurrence == null) {
@@ -583,7 +635,9 @@ class AnnouncementScheduler {
     }
 
     // For recurring announcements, find the next valid day
-    final targetDays = recurrence == RecurrencePattern.custom ? (customDays ?? []) : recurrence.defaultDays;
+    final targetDays = recurrence == RecurrencePattern.custom
+        ? (customDays ?? [])
+        : recurrence.defaultDays;
 
     // Start checking from today
     var candidate = today;
@@ -611,7 +665,15 @@ class AnnouncementScheduler {
   /// This setter allows overriding the calculation function for testing
   /// purposes. In production, the default implementation is used.
   @visibleForTesting
-  set calculateNextOccurrence(DateTime Function(TimeOfDay time, RecurrencePattern? recurrence, List<int>? customDays, DateTime from) fn) {
+  set calculateNextOccurrence(
+    DateTime Function(
+      TimeOfDay time,
+      RecurrencePattern? recurrence,
+      List<int>? customDays,
+      DateTime from,
+    )
+    fn,
+  ) {
     _calculateNextOccurrence = fn;
   }
 }

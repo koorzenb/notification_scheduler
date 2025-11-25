@@ -87,6 +87,79 @@ class ScheduledAnnouncement {
     this.metadata,
   });
 
+  /// Creates a [ScheduledAnnouncement] from a JSON map
+  ///
+  /// Deserializes a Map<String, dynamic> previously created by [toJson].
+  /// Handles all nullable fields gracefully with safe defaults.
+  ///
+  /// Throws [ArgumentError] if required fields are missing or invalid.
+  factory ScheduledAnnouncement.fromJson(Map<String, dynamic> json) {
+    // Validate required fields
+    if (!json.containsKey('id') || json['id'] == null) {
+      throw ArgumentError('Required field "id" is missing or null');
+    }
+    if (!json.containsKey('content') || json['content'] == null) {
+      throw ArgumentError('Required field "content" is missing or null');
+    }
+    if (!json.containsKey('scheduledTime') || json['scheduledTime'] == null) {
+      throw ArgumentError('Required field "scheduledTime" is missing or null');
+    }
+
+    // Deserialize RecurrencePattern from index
+    RecurrencePattern? recurrence;
+    if (json['recurrence'] != null) {
+      final recurrenceIndex = json['recurrence'] as int;
+      if (recurrenceIndex >= 0 &&
+          recurrenceIndex < RecurrencePattern.values.length) {
+        recurrence = RecurrencePattern.values[recurrenceIndex];
+      }
+    }
+
+    // Deserialize customDays with type safety
+    List<int>? customDays;
+    if (json['customDays'] != null) {
+      final dynamicList = json['customDays'] as List<dynamic>;
+      customDays = dynamicList.cast<int>();
+    }
+
+    // Deserialize metadata with type safety
+    Map<String, dynamic>? metadata;
+    if (json['metadata'] != null) {
+      metadata = Map<String, dynamic>.from(json['metadata'] as Map);
+    }
+
+    return ScheduledAnnouncement(
+      id: json['id'] as String,
+      content: json['content'] as String,
+      scheduledTime: DateTime.fromMillisecondsSinceEpoch(
+        json['scheduledTime'] as int,
+      ),
+      recurrence: recurrence,
+      customDays: customDays,
+      isActive: json['isActive'] as bool? ?? true,
+      metadata: metadata,
+    );
+  }
+
+  /// Converts this announcement to a JSON map for persistence
+  ///
+  /// Returns a Map<String, dynamic> that can be stored in local storage.
+  /// All fields are serialized to JSON-compatible types:
+  /// - DateTime → milliseconds since epoch (int)
+  /// - RecurrencePattern → index (int)
+  /// - Lists and Maps → preserved as-is
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'content': content,
+      'scheduledTime': scheduledTime.millisecondsSinceEpoch,
+      'recurrence': recurrence?.index,
+      'customDays': customDays,
+      'isActive': isActive,
+      'metadata': metadata,
+    };
+  }
+
   /// Creates a copy of this announcement with the given fields replaced
   ScheduledAnnouncement copyWith({
     String? id,

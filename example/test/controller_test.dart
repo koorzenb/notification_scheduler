@@ -21,9 +21,21 @@ void main() {
     });
 
     test('should initialize with correct default values', () {
-      expect(controller.isInitializing, isFalse, reason: 'Controller should not be initializing on creation');
-      expect(controller.errorMessage, isNull, reason: 'No error message should be set initially');
-      expect(controller.hasError, isFalse, reason: 'Should not have error initially');
+      expect(
+        controller.isInitializing,
+        isFalse,
+        reason: 'Controller should not be initializing on creation',
+      );
+      expect(
+        controller.errorMessage,
+        isNull,
+        reason: 'No error message should be set initially',
+      );
+      expect(
+        controller.hasError,
+        isFalse,
+        reason: 'Should not have error initially',
+      );
     });
 
     test('should return false for isSchedulerInitialized initially', () {

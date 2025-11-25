@@ -115,19 +115,19 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
 
 **Goal**: Enable `ScheduledAnnouncement` to be persisted and retrieved from storage.
 
-- [ ] **Task 1.1**: Add `toJson()` method to `ScheduledAnnouncement`
+- [x] **Task 1.1**: Add `toJson()` method to `ScheduledAnnouncement`
   - Convert all fields to JSON-serializable format
   - Handle `DateTime` serialization (milliseconds since epoch)
   - Handle `RecurrencePattern` enum serialization (index or name)
   - Handle nullable fields (`recurrence`, `customDays`, `metadata`)
   
-- [ ] **Task 1.2**: Add `fromJson()` factory constructor to `ScheduledAnnouncement`
+- [x] **Task 1.2**: Add `fromJson()` factory constructor to `ScheduledAnnouncement`
   - Parse JSON map back to `ScheduledAnnouncement` object
   - Deserialize `DateTime` from milliseconds
   - Deserialize `RecurrencePattern` from index/name
   - Provide safe defaults for missing fields
   
-- [ ] **Task 1.3**: Write unit tests for serialization
+- [x] **Task 1.3**: Write unit tests for serialization
   - Test `toJson()` with all field combinations
   - Test `fromJson()` with valid data
   - Test `fromJson()` with missing optional fields
@@ -148,7 +148,7 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
 
 **Note**: Since the package is unpublished, we can safely remove old methods without deprecation.
 
-- [ ] **Task 2.1**: Add `getScheduledAnnouncements()` method
+- [x] **Task 2.1**: Add `getScheduledAnnouncements()` method
   - Retrieve stored list from `_storage.get<List<dynamic>>('scheduledAnnouncements')`
   - Deserialize each JSON object to `ScheduledAnnouncement`
   - Return empty list if no data exists
