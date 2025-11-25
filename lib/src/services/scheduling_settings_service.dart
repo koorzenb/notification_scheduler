@@ -28,6 +28,7 @@ class SchedulingSettingsService {
   // Recurring announcement settings
   Future<bool> getIsRecurring() async =>
       await _storage.get<bool>('isRecurring') ?? false;
+
   Future<void> setIsRecurring(bool isRecurring) =>
       _storage.set('isRecurring', isRecurring);
 

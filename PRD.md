@@ -183,6 +183,28 @@ To provide the most developer-friendly and reliable Flutter package for scheduli
 - Validation limits are configurable
 - Past times automatically scheduled for next occurrence
 
+#### 3.5.1 Platform Limitations and Best Practices
+
+**Android Platform Behavior**:
+- Android does **not** enforce scheduling limits at the OS level
+- Apps can technically schedule unlimited notifications without system restrictions
+- No runtime checks or warnings from the Android platform for excessive scheduling
+
+**Risks of Excessive Notifications**:
+- **Performance degradation**: Too many pending notifications consume system resources
+- **Battery drain**: Each scheduled notification requires wake locks and alarms
+- **Poor user experience**: Notification fatigue leads to users disabling notifications or uninstalling the app
+- **Memory impact**: Large numbers of pending notifications can affect app and system memory
+- **Delivery reliability**: Excessive scheduling may trigger Android's battery optimization, causing unreliable delivery
+
+**Package Safeguards**:
+This package implements **programmatic validation limits** as a best practice to prevent these issues and maintain app quality, even though Android permits unlimited scheduling. Developers are **strongly encouraged** to keep validation enabled and configure appropriate limits for their use case.
+
+**Recommended Limits**:
+- `maxNotificationsPerDay`: 5-10 (prevents notification fatigue)
+- `maxScheduledNotifications`: 30-50 (balances functionality with resource usage)
+- Adjust based on your specific use case, but avoid exceeding 100 total scheduled notifications
+
 ### 3.6 Feature: Status Monitoring
 
 **Description**: Track announcement lifecycle and delivery status.
