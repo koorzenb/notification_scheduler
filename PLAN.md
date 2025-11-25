@@ -154,7 +154,7 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
   - Return empty list if no data exists
   - Handle deserialization errors gracefully
   
-- [ ] **Task 2.2**: Add `setScheduledAnnouncements()` method
+- [x] **Task 2.2**: Add `setScheduledAnnouncements()` method
   - Accept `List<ScheduledAnnouncement>` parameter
   - Serialize each announcement to JSON
   - Store as `List<Map<String, dynamic>>` in storage
