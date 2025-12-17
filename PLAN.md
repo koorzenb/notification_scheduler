@@ -287,25 +287,25 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
   - Add optional `Map<String, dynamic>? metadata` parameter
   - Keep existing parameters (content, dateTime)
   
-- [ ] **Task 4.2**: Create `ScheduledAnnouncement` object and derive notification ID
+- [x] **Task 4.2**: Create `ScheduledAnnouncement` object and derive notification ID
   - Build announcement with provided parameters
   - Set `recurrence: null` (one-time)
   - Set `customDays: null`
   - Set `scheduledTime: dateTime`
   - Set `isActive: true`
   - Include `metadata` if provided
-  - Use announcement ID directly as notification ID: `int.parse(announcementId)`
+  - Use announcement ID directly as notification ID (already int)
   
-- [ ] **Task 4.3**: Persist announcement using new storage
+- [x] **Task 4.3**: Persist announcement using new storage
   - Call `_settingsService.addScheduledAnnouncement(announcement)`
   - Store before scheduling platform notification
   - Handle errors
   
-- [ ] **Task 4.4**: Verify old storage not used (already removed in Phase 2)
+- [x] **Task 4.4**: Verify old storage not used (already removed in Phase 2)
   - Verify no calls to removed `setScheduledTime()` method
   - Use new announcement persistence
   
-- [ ] **Task 4.5**: Write unit tests
+- [x] **Task 4.5**: Write unit tests
   - Test one-time announcement creation
   - Test ID generation
   - Test persistence
