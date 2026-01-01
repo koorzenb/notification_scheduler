@@ -410,6 +410,7 @@ class CoreNotificationService {
 
       final activeAnnouncements = <ScheduledAnnouncement>[];
       final staleIds = <int>[];
+      final matchedPendingIds = <int>{};
 
       for (final announcement in storedAnnouncements) {
         bool isStillActive = false;
@@ -421,15 +422,18 @@ class CoreNotificationService {
           // One-time: Check exact ID match
           if (pendingIds.contains(baseId)) {
             isStillActive = true;
+            matchedPendingIds.add(baseId);
           }
         } else {
           // Recurring: Check if any notification derived from this ID exists
           // We check a reasonable range (e.g. base to base + 30)
           // Since we schedule up to 14 days ahead, 30 is safe.
           for (int i = 0; i < 30; i++) {
-            if (pendingIds.contains(baseId + i)) {
+            final idToCheck = baseId + i;
+            if (pendingIds.contains(idToCheck)) {
               isStillActive = true;
-              break;
+              matchedPendingIds.add(idToCheck);
+              // Continue checking to find all matches for orphan detection
             }
           }
         }
@@ -438,6 +442,16 @@ class CoreNotificationService {
           activeAnnouncements.add(announcement);
         } else {
           staleIds.add(announcement.id);
+        }
+      }
+
+      // Check for orphan notifications (exist in platform but no stored announcement)
+      if (_config.enableDebugLogging) {
+        final orphanIds = pendingIds.difference(matchedPendingIds);
+        if (orphanIds.isNotEmpty) {
+          debugPrint(
+            '[CoreNotificationService] Found ${orphanIds.length} orphan notifications (no stored announcement): $orphanIds',
+          );
         }
       }
 

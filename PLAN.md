@@ -323,21 +323,21 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
 
 **Goal**: Implement reconciliation strategy between platform and storage.
 
-- [ ] **Task 5.1**: Refactor `getScheduledAnnouncements()` method
+- [x] **Task 5.1**: Refactor `getScheduledAnnouncements()` method
   - Retrieve `pendingNotificationRequests()` from platform (source of truth)
   - Retrieve stored `List<ScheduledAnnouncement>` from storage
   - Create Set of pending notification IDs for fast lookup
   
-- [ ] **Task 5.2**: Implement reconciliation logic
+- [x] **Task 5.2**: Implement reconciliation logic
   - Filter stored announcements: keep only those whose ID is in pending notifications
   - This automatically excludes completed/cancelled announcements
   
-- [ ] **Task 5.3**: Implement automatic cleanup
+- [x] **Task 5.3**: Implement automatic cleanup
   - Identify announcement IDs in storage but NOT in pending notifications
   - Call `_settingsService.removeScheduledAnnouncements(staleIds)`
   - Log cleanup actions if debug logging enabled
   
-- [ ] **Task 5.4**: Handle edge cases
+- [x] **Task 5.4**: Handle edge cases
   - Platform notification exists but no stored announcement: skip or log warning
   - Stored announcement exists but no platform notification: cleanup (already handled)
   - Empty pending notifications: return empty list and cleanup all storage
