@@ -398,6 +398,18 @@ class CoreNotificationService {
   /// If a notification exists in the system but has no stored time (edge case),
   /// it defaults to the current time.
   Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
+    return _reconcileAnnouncements();
+  }
+
+  /// Reconcile stored announcements with platform notifications.
+  ///
+  /// This method performs the core logic of:
+  /// 1. Retrieving stored announcements
+  /// 2. Retrieving pending platform notifications
+  /// 3. Filtering stored announcements to keep only those that are still pending
+  /// 4. Cleaning up stale announcements from storage
+  /// 5. Returning the list of active, sorted announcements
+  Future<List<ScheduledAnnouncement>> _reconcileAnnouncements() async {
     try {
       // Get stored definitions
       final storedAnnouncements = await _settingsService
@@ -537,73 +549,15 @@ class CoreNotificationService {
   /// are removed from storage to prevent stale data.
   Future<void> _cleanupCompletedAnnouncements() async {
     try {
-      final pendingNotifications = await _notifications
-          .pendingNotificationRequests();
-      final pendingIds = pendingNotifications
-          .map((n) => n.id.toString())
-          .toSet();
-
       if (_config.enableDebugLogging) {
         debugPrint(
-          '[CoreNotificationService] _cleanupCompletedAnnouncements: Pending notification IDs from system: $pendingIds',
-        );
-        debugPrint(
-          '[CoreNotificationService] _cleanupCompletedAnnouncements: Number of pending: ${pendingIds.length}',
+          '[CoreNotificationService] _cleanupCompletedAnnouncements: Triggering reconciliation',
         );
       }
 
-      final storedTimes = await _getScheduledTimesCompat();
-
-      if (_config.enableDebugLogging) {
-        debugPrint(
-          '[CoreNotificationService] _cleanupCompletedAnnouncements: Stored times keys: ${storedTimes.keys.toList()}',
-        );
-        debugPrint(
-          '[CoreNotificationService] _cleanupCompletedAnnouncements: Stored times: $storedTimes',
-        );
-      }
-
-      final idsToRemove = storedTimes.keys
-          .where((id) => !pendingIds.contains(id))
-          .toList();
-
-      if (_config.enableDebugLogging) {
-        debugPrint(
-          '[CoreNotificationService] _cleanupCompletedAnnouncements: IDs to remove: $idsToRemove',
-        );
-      }
-
-      if (idsToRemove.isNotEmpty) {
-        // Remove completed announcements from storage
-        for (final id in idsToRemove) {
-          storedTimes.remove(id);
-        }
-
-        // Convert back to Map<int, DateTime> for storage
-        final cleanedTimes = <int, DateTime>{};
-        for (final entry in storedTimes.entries) {
-          final intKey = int.tryParse(entry.key);
-          if (intKey != null) {
-            cleanedTimes[intKey] = DateTime.fromMillisecondsSinceEpoch(
-              entry.value,
-            );
-          }
-        }
-
-        await _setScheduledTimesForRecurringCompat(cleanedTimes);
-
-        if (_config.enableDebugLogging) {
-          debugPrint(
-            '[CoreNotificationService] Cleaned up ${idsToRemove.length} completed announcement(s)',
-          );
-        }
-      } else {
-        if (_config.enableDebugLogging) {
-          debugPrint(
-            '[CoreNotificationService] No announcements to clean up (all still pending)',
-          );
-        }
-      }
+      // Reconcile storage with platform notifications
+      // This removes any stale announcements (those not in pending notifications).
+      await _reconcileAnnouncements();
     } catch (e) {
       if (_config.enableDebugLogging) {
         debugPrint('[CoreNotificationService] Cleanup failed: $e');

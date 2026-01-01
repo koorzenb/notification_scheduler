@@ -61,6 +61,7 @@ See `.github/project-config.md` for project-specific versions and requirements.
 - Async/await (not `.then()`)
 - Enums instead of string constants
 - `///` docs for public APIs
+- **CQS**: No side effects in getters/retrievers
 
 ### File Limits
 

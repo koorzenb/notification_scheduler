@@ -99,6 +99,18 @@ class MyClass {
 - **Functions**: Maximum 30-50 lines
 - **Solution**: Extract helper methods
 
+### Clean Code Principles
+
+- **Command-Query Separation (CQS)**:
+  - Methods should either return a value (query) or perform an action (command), but ideally not both.
+  - **Getters**: `get property` or `getSomething()` should be idempotent and free of side effects.
+  - **Side Effects**: Avoid hiding cleanup, state mutation, or heavy processing inside simple retrieval methods.
+  - **Pattern**: If retrieval requires reconciliation/cleanup, extract the logic to a private `_reconcile()` method and call it explicitly.
+
+- **Single Responsibility**:
+  - Each class and method should have one reason to change.
+  - Separate "maintenance" logic (cleanup) from "retrieval" logic (getters).
+
   ```dart
   // ❌ Too long
   void processData() {

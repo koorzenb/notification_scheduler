@@ -77,6 +77,8 @@ For each code change, verify:
 - [ ] Enums used instead of string constants
 - [ ] Proper async/await usage
 - [ ] No hardcoded values (use constants)
+- [ ] **Command-Query Separation**: Getters/retrievers have no side effects
+- [ ] **Explicit Intent**: Cleanup/maintenance logic is explicit, not hidden
 
 ### ✅ Architecture & Patterns
 

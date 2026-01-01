@@ -377,7 +377,7 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
   - Identify calls to deprecated storage methods
   - Understand current cleanup strategy
   
-- [ ] **Task 6.2**: Refactor cleanup method
+- [x] **Task 6.2**: Refactor cleanup method
   - Use `getScheduledAnnouncements()` (which already reconciles)
   - Cleanup is now automatic during retrieval
   - Consider if explicit cleanup method is still needed
