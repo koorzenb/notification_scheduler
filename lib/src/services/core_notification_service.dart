@@ -129,7 +129,7 @@ class CoreNotificationService {
   }
 
   /// Schedule a one-time announcement
-  Future<void> scheduleOneTimeAnnouncement({
+  Future<int> scheduleOneTimeAnnouncement({
     required String content,
     required DateTime dateTime,
     int? id,
@@ -194,6 +194,8 @@ class CoreNotificationService {
         final delay = tzDateTime.difference(tz.TZDateTime.now(tz.local));
         _scheduleUnattendedAnnouncement(content, delay);
       }
+
+      return announcementId;
     } catch (e) {
       _statusController.add(AnnouncementStatus.failed);
       throw NotificationSchedulingException(
@@ -212,7 +214,7 @@ class CoreNotificationService {
   }
 
   /// Schedule a recurring announcement
-  Future<void> scheduleRecurringAnnouncement({
+  Future<int> scheduleRecurringAnnouncement({
     int? id,
     required String content,
     required TimeOfDay announcementTime,
@@ -266,18 +268,20 @@ class CoreNotificationService {
       await _settingsService.addScheduledAnnouncement(announcement);
 
       if (recurrence != null) {
-        await _scheduleRecurringNotifications(
+        await scheduleRecurringNotifications(
           announcementId: announcementId,
           content: content,
           recurrencePattern: recurrence,
           customDays: customDays ?? recurrence.defaultDays,
         );
       } else {
-        await _scheduleDailyNotification(
+        await _scheduleOneTimeAtTimeOfDay(
           announcementId: announcementId,
           content: content,
         );
       }
+
+      return announcementId;
     } catch (e) {
       _statusController.add(AnnouncementStatus.failed);
       throw NotificationSchedulingException(
@@ -634,8 +638,8 @@ class CoreNotificationService {
     await androidPlugin?.createNotificationChannel(androidChannel);
   }
 
-  /// Schedule a daily recurring notification at a specific time
-  Future<void> _scheduleDailyNotification({
+  /// Schedule a one-time notification at the configured time (next occurrence)
+  Future<void> _scheduleOneTimeAtTimeOfDay({
     required int announcementId,
     required String content,
   }) async {
@@ -666,7 +670,7 @@ class CoreNotificationService {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
 
-    await _scheduleRecurringNotification(
+    await _scheduleOneTimeNotification(
       notificationId: announcementId,
       scheduledDate: scheduledDate,
       content: content,
@@ -680,68 +684,26 @@ class CoreNotificationService {
   }
 
   /// Schedule recurring notifications
-  Future<void> _scheduleRecurringNotifications({
-    required int announcementId,
-    required String content,
-    required RecurrencePattern recurrencePattern,
-    required List<int> customDays,
-  }) async {
-    await scheduleRecurringNotificationsImpl(
-      announcementId: announcementId,
-      content: content,
-      recurrencePattern: recurrencePattern,
-      customDays: customDays,
-      config: _config,
-      getAnnouncementHour: _settingsService.getAnnouncementHour,
-      getAnnouncementMinute: _settingsService.getAnnouncementMinute,
-      getRecurringDates: _getRecurringDates,
-      validateRecurringSettings: _validateRecurringSettings,
-      scheduleRecurringNotification: _scheduleRecurringNotification,
-      scheduleUnattendedAnnouncement: _scheduleUnattendedAnnouncement,
-    );
-  }
-
-  /// Testable implementation of schedule recurring notifications
   @visibleForTesting
-  static Future<void> scheduleRecurringNotificationsImpl({
+  Future<void> scheduleRecurringNotifications({
     required int announcementId,
     required String content,
     required RecurrencePattern recurrencePattern,
     required List<int> customDays,
-    required AnnouncementConfig config,
-    required Future<int?> Function() getAnnouncementHour,
-    required Future<int?> Function() getAnnouncementMinute,
-    required List<tz.TZDateTime> Function({
-      required RecurrencePattern recurrencePattern,
-      required List<int> customDays,
-      required tz.TZDateTime startDate,
-      required int maxDays,
-    })
-    getRecurringDates,
-    required Future<void> Function(RecurrencePattern, List<int>)
-    validateRecurringSettings,
-    required Future<void> Function({
-      required int notificationId,
-      required tz.TZDateTime scheduledDate,
-      required String content,
-      required String title,
-    })
-    scheduleRecurringNotification,
-    required void Function(String, Duration) scheduleUnattendedAnnouncement,
   }) async {
-    final hour = await getAnnouncementHour();
-    final minute = await getAnnouncementMinute();
+    final hour = await _settingsService.getAnnouncementHour();
+    final minute = await _settingsService.getAnnouncementMinute();
 
     if (hour == null || minute == null) {
       throw const NotificationSchedulingException('Announcement time not set');
     }
 
     // Validate recurring settings
-    await validateRecurringSettings(recurrencePattern, customDays);
+    await _validateRecurringSettings(recurrencePattern, customDays);
 
     tz.initializeTimeZones();
-    if (config.forceTimezone && config.timezoneLocation != null) {
-      tz.setLocalLocation(tz.getLocation(config.timezoneLocation!));
+    if (_config.forceTimezone && _config.timezoneLocation != null) {
+      tz.setLocalLocation(tz.getLocation(_config.timezoneLocation!));
     }
 
     final now = tz.TZDateTime.now(tz.local);
@@ -756,25 +718,101 @@ class CoreNotificationService {
       minute,
     );
 
-    final daysToSchedule = getRecurringDates(
+    final result = _calculateRecurringDatesAndComponent(
       recurrencePattern: recurrencePattern,
+      baseScheduledTime: baseScheduledTime,
+      now: now,
       customDays: customDays,
-      startDate: baseScheduledTime,
-      maxDays: _maxSchedulingDays, // Android system limitation
+      getRecurringDates: _getRecurringDates,
     );
 
-    for (int i = 0; i < daysToSchedule.length; i++) {
-      final scheduledDate = daysToSchedule[i];
+    await _scheduleNotifications(
+      datesToSchedule: result.dates,
+      matchComponent: result.component,
+      announcementId: announcementId,
+      content: content,
+      config: _config,
+      now: now,
+      scheduleRecurringNotification: _scheduleRecurringNotification,
+      scheduleUnattendedAnnouncement: _scheduleUnattendedAnnouncement,
+    );
+  }
+
+  static ({List<tz.TZDateTime> dates, DateTimeComponents component})
+  _calculateRecurringDatesAndComponent({
+    required RecurrencePattern recurrencePattern,
+    required tz.TZDateTime baseScheduledTime,
+    required tz.TZDateTime now,
+    required List<int> customDays,
+    required List<tz.TZDateTime> Function({
+      required RecurrencePattern recurrencePattern,
+      required List<int> customDays,
+      required tz.TZDateTime startDate,
+      required int maxDays,
+    })
+    getRecurringDates,
+  }) {
+    if (recurrencePattern == RecurrencePattern.daily) {
+      // For daily, we just need the next occurrence
+      var scheduledDate = baseScheduledTime;
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
+      return (dates: [scheduledDate], component: DateTimeComponents.time);
+    } else {
+      // For other patterns, we need to find the next occurrence of each target day
+      // We check the next 14 days to ensure we find all unique weekdays involved,
+      // even if today's time has passed.
+      final potentialDates = getRecurringDates(
+        recurrencePattern: recurrencePattern,
+        customDays: customDays,
+        startDate: baseScheduledTime,
+        maxDays: _maxSchedulingDays,
+      );
+
+      // Filter to keep only the first occurrence of each weekday
+      final dates = <tz.TZDateTime>[];
+      final seenWeekdays = <int>{};
+      for (final date in potentialDates) {
+        if (!seenWeekdays.contains(date.weekday)) {
+          dates.add(date);
+          seenWeekdays.add(date.weekday);
+        }
+      }
+      return (dates: dates, component: DateTimeComponents.dayOfWeekAndTime);
+    }
+  }
+
+  static Future<void> _scheduleNotifications({
+    required List<tz.TZDateTime> datesToSchedule,
+    required DateTimeComponents matchComponent,
+    required int announcementId,
+    required String content,
+    required AnnouncementConfig config,
+    required tz.TZDateTime now,
+    required Future<void> Function({
+      required int notificationId,
+      required tz.TZDateTime scheduledDate,
+      required String content,
+      required String title,
+      DateTimeComponents? matchDateTimeComponents,
+    })
+    scheduleRecurringNotification,
+    required void Function(String, Duration) scheduleUnattendedAnnouncement,
+  }) async {
+    for (int i = 0; i < datesToSchedule.length; i++) {
+      final scheduledDate = datesToSchedule[i];
       final notificationId = announcementId + i;
       await scheduleRecurringNotification(
         notificationId: notificationId,
         scheduledDate: scheduledDate,
         content: content,
         title: 'Recurring Announcement',
+        matchDateTimeComponents: matchComponent,
       );
 
       if (config.enableTTS && i == 0) {
-        // Only schedule TTS for the next occurrence
+        // Only schedule TTS for the next occurrence (closest one)
         final announcementDelay = scheduledDate.difference(now);
         scheduleUnattendedAnnouncement(content, announcementDelay);
       }
@@ -875,6 +913,7 @@ class CoreNotificationService {
     required tz.TZDateTime scheduledDate,
     required String content,
     required String title,
+    DateTimeComponents? matchDateTimeComponents,
   }) async {
     if (_config.enableDebugLogging) {
       debugPrint(
@@ -916,7 +955,7 @@ class CoreNotificationService {
 
     if (_config.enableDebugLogging) {
       debugPrint(
-        '[CoreNotificationService] _scheduleRecurringNotification: Using schedule mode=$scheduleMode, matchDateTimeComponents=DateTimeComponents.time',
+        '[CoreNotificationService] _scheduleRecurringNotification: Using schedule mode=$scheduleMode, matchDateTimeComponents=$matchDateTimeComponents',
       );
     }
 
@@ -927,7 +966,8 @@ class CoreNotificationService {
       scheduledDate,
       platformDetails,
       androidScheduleMode: scheduleMode,
-      matchDateTimeComponents: DateTimeComponents.time,
+      matchDateTimeComponents:
+          matchDateTimeComponents ?? DateTimeComponents.time,
       payload: content, // Add payload for notification response
     );
 
@@ -1096,51 +1136,5 @@ class CoreNotificationService {
     // Background processing if needed
     // Note: Cannot emit status or trigger cleanup here as this is a static method
     // Cleanup will happen on next app launch when pending notifications are reconciled
-  }
-
-  // COMPATIBILITY METHODS for transition from old scheduled time storage
-  // These methods provide compatibility between the old Map<String, int> storage
-  // and the new List<ScheduledAnnouncement> storage during the transition period.
-
-  /// Compatibility method to get scheduled times in the old `Map<String, int>` format.
-  ///
-  /// Converts the new `List<ScheduledAnnouncement>` storage back to the old
-  /// `Map<String, int>` format where the key is the notification ID and the
-  /// value is the millisecondsSinceEpoch timestamp.
-  Future<Map<String, int>> _getScheduledTimesCompat() async {
-    final announcements = await _settingsService.getScheduledAnnouncements();
-    final result = <String, int>{};
-
-    for (final announcement in announcements) {
-      result[announcement.id.toString()] =
-          announcement.scheduledTime.millisecondsSinceEpoch;
-    }
-
-    return result;
-  }
-
-  /// Compatibility method for recurring notifications that expect `Map<int, DateTime>` format.
-  ///
-  /// This method handles the specific case where recurring notification scheduling
-  /// passes a `Map<int, DateTime>` which needs to be converted to announcements.
-  Future<void> _setScheduledTimesForRecurringCompat(
-    Map<int, DateTime> scheduledTimes,
-  ) async {
-    final announcements = <ScheduledAnnouncement>[];
-
-    for (final entry in scheduledTimes.entries) {
-      final notificationId = entry.key;
-      final scheduledTime = entry.value;
-
-      final announcement = ScheduledAnnouncement(
-        id: notificationId,
-        content: 'Recurring Announcement', // Placeholder content
-        scheduledTime: scheduledTime,
-        isActive: true,
-      );
-      announcements.add(announcement);
-    }
-
-    await _settingsService.setScheduledAnnouncements(announcements);
   }
 }

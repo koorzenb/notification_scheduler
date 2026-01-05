@@ -180,6 +180,43 @@ try {
 }
 ```
 
+## Internal Architecture
+
+The package follows a layered architecture to separate concerns and ensure testability.
+
+### 1. Public Facade (`AnnouncementScheduler`)
+
+- **Role**: Main entry point for consumers.
+- **Responsibilities**:
+  - Input validation
+  - Configuration management
+  - Delegating work to internal services
+  - Exposing status streams
+
+### 2. Core Logic (`CoreNotificationService`)
+
+- **Role**: Internal service handling platform-specific logic.
+- **Responsibilities**:
+  - Interfacing with `flutter_local_notifications`
+  - Managing TTS playback
+  - Reconciling stored announcements with platform state
+  - Handling recurrence logic and date calculations
+
+### 3. Persistence Layer (`SchedulingSettingsService`)
+
+- **Role**: Manages storage of scheduled announcements.
+- **Responsibilities**:
+  - Persisting `ScheduledAnnouncement` objects
+  - Storing global settings (e.g., default times)
+  - Providing data for reconciliation
+
+### 4. Storage Abstraction (`IStorageService`)
+
+- **Role**: Abstract interface for underlying storage.
+- **Responsibilities**:
+  - Decoupling logic from specific storage implementations (e.g., Hive, SharedPreferences)
+  - Enabling easy mocking for tests
+
 ## Usage Examples
 
 ### Basic Daily Announcement

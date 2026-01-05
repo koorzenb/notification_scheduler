@@ -242,9 +242,11 @@ class AnnouncementScheduler {
   ///   This can be used to store additional context or application-specific
   ///   information.
   ///
+  /// - [id]: Optional unique identifier. If not provided, one will be generated.
+  ///
   /// ## Returns
   ///
-  /// A [Future] that completes when the announcement has been scheduled.
+  /// A [Future] that completes with the ID of the scheduled announcement.
   /// Use [getScheduledAnnouncements] to view all scheduled announcements.
   ///
   /// ## Throws
@@ -262,7 +264,7 @@ class AnnouncementScheduler {
   ///
   /// ```dart
   /// // Daily announcement
-  /// await scheduler.scheduleAnnouncement(
+  /// final id = await scheduler.scheduleAnnouncement(
   ///   content: 'Good morning! Time to start your day.',
   ///   announcementTime: TimeOfDay(hour: 7, minute: 0),
   ///   recurrence: RecurrencePattern.daily,
@@ -297,13 +299,14 @@ class AnnouncementScheduler {
   /// - [getScheduledAnnouncements] to view all scheduled announcements
   /// - [cancelScheduledAnnouncements] to cancel all announcements
   /// - [RecurrencePattern] for available recurrence options
-  Future<void> scheduleAnnouncement({
+  Future<int> scheduleAnnouncement({
     required String content,
     required TimeOfDay announcementTime,
     RecurrencePattern? recurrence,
     List<int>? customDays,
     Map<String, dynamic>? metadata,
     DateTime? currentTime,
+    int? id,
   }) async {
     currentTime ??= DateTime.now();
     // Validate content
@@ -334,14 +337,19 @@ class AnnouncementScheduler {
     );
 
     // Schedule with the notification service
-    await _notificationService!.scheduleRecurringAnnouncement(
-      content: content,
-      announcementTime: announcementTime,
-      recurrence: recurrence,
-      customDays: customDays,
-    );
+    final announcementId = await _notificationService!
+        .scheduleRecurringAnnouncement(
+          id: id,
+          content: content,
+          announcementTime: announcementTime,
+          recurrence: recurrence,
+          customDays: customDays,
+          metadata: metadata,
+        );
 
-    _log('Scheduled announcement at $nextOccurrence');
+    _log('Scheduled announcement at $nextOccurrence with ID: $announcementId');
+
+    return announcementId;
   }
 
   /// Schedule a one-time announcement at a specific date and time.
@@ -367,7 +375,7 @@ class AnnouncementScheduler {
   ///
   /// ## Returns
   ///
-  /// A [Future] that completes when the announcement has been scheduled.
+  /// A [Future] that completes with the ID of the scheduled announcement.
   /// Use [getScheduledAnnouncements] to view all scheduled announcements.
   ///
   /// ## Throws
@@ -384,7 +392,7 @@ class AnnouncementScheduler {
   ///
   /// ```dart
   /// // Schedule for 2 hours from now
-  /// await scheduler.scheduleOneTimeAnnouncement(
+  /// final id = await scheduler.scheduleOneTimeAnnouncement(
   ///   content: 'Meeting reminder: Team standup in 5 minutes',
   ///   dateTime: DateTime.now().add(Duration(hours: 2)),
   /// );
@@ -403,7 +411,7 @@ class AnnouncementScheduler {
   /// - [scheduleAnnouncement] for recurring or time-based announcements
   /// - [getScheduledAnnouncements] to view all scheduled announcements
   /// - [cancelScheduledAnnouncements] to cancel all announcements
-  Future<void> scheduleOneTimeAnnouncement({
+  Future<int> scheduleOneTimeAnnouncement({
     required String content,
     required DateTime dateTime,
     int? id,
@@ -435,6 +443,8 @@ class AnnouncementScheduler {
         'Scheduled one-time announcement at $dateTime with ID: $announcementId',
       );
     }
+
+    return announcementId;
   }
 
   /// Cancel all scheduled announcements.

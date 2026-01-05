@@ -49,6 +49,7 @@ Refer to `.github/project-config.md` for:
 
 **Refactoring Verification**:
 When reviewing refactored code, explicitly check for:
+
 - Methods or variables that became unused due to the changes
 - Callsites that were redirected, leaving the original target obsolete
 - Recommend **Removal** for internal unused code

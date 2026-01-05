@@ -69,12 +69,14 @@ void main() {
       const id = 12345;
       const metadata = {'key': 'value'};
 
-      await service.scheduleOneTimeAnnouncement(
+      final returnedId = await service.scheduleOneTimeAnnouncement(
         content: content,
         dateTime: dateTime,
         id: id,
         metadata: metadata,
       );
+
+      expect(returnedId, id);
 
       // Verify persistence
       final captured = verify(

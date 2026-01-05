@@ -9,7 +9,7 @@ class MockCoreNotificationService extends Mock
   Future<void> initialize() async {}
 
   @override
-  Future<void> scheduleOneTimeAnnouncement({
+  Future<int> scheduleOneTimeAnnouncement({
     required String? content,
     required DateTime? dateTime,
     int? id,
@@ -22,8 +22,8 @@ class MockCoreNotificationService extends Mock
         #id: id,
         #metadata: metadata,
       }),
-      returnValue: Future.value(),
-      returnValueForMissingStub: Future.value(),
+      returnValue: Future.value(id ?? 0),
+      returnValueForMissingStub: Future.value(id ?? 0),
     );
   }
 }

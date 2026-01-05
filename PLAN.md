@@ -461,32 +461,32 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
 
 **Goal**: Update internal methods to work with announcement objects.
 
-- [ ] **Task 9.1**: Update `_scheduleRecurringNotifications()` signature
-  - Add `required String announcementId` parameter
+- [x] **Task 9.1**: Update `_scheduleRecurringNotifications()` signature
+  - Add `required int announcementId` parameter
   - Pass to child methods
   
-- [ ] **Task 9.2**: Update `scheduleRecurringNotificationsImpl()` signature
-  - Add `required String announcementId` parameter
+- [x] **Task 9.2**: Update `scheduleRecurringNotificationsImpl()` signature
+  - Add `required int announcementId` parameter
   - Use announcement ID for notification IDs
   - Update all call sites
   
-- [ ] **Task 9.3**: Update notification ID generation
+- [x] **Task 9.3**: Update notification ID generation
   - Current: `notificationId = i` (sequential - problematic!)
-  - New: Derive from `announcementId` + offset: `int.parse(announcementId) + i`
-  - One-time announcements: `int.parse(announcementId)` (no offset)
-  - Recurring announcements: `int.parse(announcementId) + dayOffset` (0, 1, 2...)
+  - New: Derive from `announcementId` + offset: `announcementId + i`
+  - One-time announcements: `announcementId` (no offset)
+  - Recurring announcements: `announcementId + dayOffset` (0, 1, 2...)
   - Ensures uniqueness across announcements (timestamp-based base)
   - Ensures consistency for same announcement (deterministic)
   
-- [ ] **Task 9.4**: Verify storage not used in internals
+- [x] **Task 9.4**: Verify storage not used in internals
   - Verify no calls to removed storage methods
   - Announcements already persisted in Phase 3/4
   
-- [ ] **Task 9.5**: Update `_scheduleDailyNotification()`
+- [x] **Task 9.5**: Update `_scheduleDailyNotification()`
   - Remove `setScheduledTime()` call
   - Ensure announcement already persisted in calling method
   
-- [ ] **Task 9.6**: Update unit tests
+- [x] **Task 9.6**: Update unit tests
   - Update `scheduleRecurringNotificationsImpl()` tests
   - Test notification ID generation from announcement ID
   - Test uniqueness and consistency
@@ -505,28 +505,28 @@ List<ScheduledAnnouncement> scheduledAnnouncements = [
 
 **Goal**: Update `API_REFERENCE.md` to reflect new architecture.
 
-- [ ] **Task 10.1**: Update `scheduleRecurringAnnouncement()` documentation
+- [x] **Task 10.1**: Update `scheduleRecurringAnnouncement()` documentation
   - Document new `id` parameter
   - Document new `metadata` parameter
   - Add examples with and without explicit ID
   - Explain ID generation
   
-- [ ] **Task 10.2**: Update `scheduleOneTimeAnnouncement()` documentation
+- [x] **Task 10.2**: Update `scheduleOneTimeAnnouncement()` documentation
   - Document new `id` parameter
   - Document new `metadata` parameter
   - Add examples
   
-- [ ] **Task 10.3**: Update `getScheduledAnnouncements()` documentation
+- [x] **Task 10.3**: Update `getScheduledAnnouncements()` documentation
   - Explain reconciliation strategy
   - Document automatic cleanup behavior
   - Note that returned list is accurate per-announcement config
   
-- [ ] **Task 10.4**: Add architecture explanation section
+- [x] **Task 10.4**: Add architecture explanation section
   - Explain old vs. new architecture
   - Provide code examples
   - Document removed singleton methods
   
-- [ ] **Task 10.5**: Update `SchedulingSettingsService` documentation
+- [x] **Task 10.5**: Update `SchedulingSettingsService` documentation
   - Document new storage methods
   - Explain per-announcement model
   - Note removed singleton methods
@@ -686,8 +686,8 @@ for (final announcement in announcements) {
 ## Risk Assessment
 
 | Risk | Impact | Mitigation |
-|------|--------|------------|
-| Breaking internal tests | Medium | Update tests incrementally in each phase |
+| ------ -------- | ------------  |  
+| Breaking   internal tests   |  Medium   | Update   tests incrementally in each   phase |
 | Increased storage size | Low | `ScheduledAnnouncement` is small (~200-500 bytes each) |
 | Reconciliation bugs | Medium | Comprehensive integration tests in Phase 12 |
 | Test coverage drop | Medium | Test tasks in every phase, monitor coverage |
@@ -698,7 +698,7 @@ for (final announcement in announcements) {
 ## Timeline Estimate
 
 | Phase | Estimated Time | Dependencies |
-|-------|---------------|--------------|
+| ------- | --------------- | -------------- |
 | Phase 1: Serialization | 2-3 hours | None |
 | Phase 2: Storage + Remove Old | 3-4 hours | Phase 1 |
 | Phase 3: Update Recurring Scheduling | 3-4 hours | Phase 1, 2 |
