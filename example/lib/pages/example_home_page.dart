@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/example_page_controller.dart';
-import '../services/announcement_service.dart';
 import '../utils/feedback_helper.dart';
 
 class ExampleHomePage extends StatelessWidget {
@@ -10,15 +9,8 @@ class ExampleHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the controller using GetX dependency injection
-    final controller = Get.put(ExamplePageController(AnnouncementService()));
-
-    // Check timezone configuration and initialize scheduler
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!controller.isSchedulerInitialized) {
-        await controller.initializeScheduler();
-      }
-    });
+    // Initialize the controller using singleton pattern
+    final controller = ExamplePageController.getOrPut;
 
     return Scaffold(
       appBar: AppBar(

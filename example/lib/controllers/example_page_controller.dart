@@ -7,29 +7,59 @@ import '../services/announcement_service.dart';
 /// Controller/ViewModel that manages the business logic and state for the example page
 /// Uses GetX for reactive state management following the GetX pattern
 class ExamplePageController extends GetxController {
-  final AnnouncementService _announcementService;
+  AnnouncementService?
+  _announcementService; // this can be null while initialization is in progress. Need a way to represent uninitialized state in UI.
 
   final _isInitializing = false.obs;
   final _errorMessage = Rxn<String>();
 
-  ExamplePageController(this._announcementService);
+  static ExamplePageController get getOrPut {
+    try {
+      return Get.find<ExamplePageController>();
+    } catch (e) {
+      return Get.put(ExamplePageController._());
+    }
+  }
+
+  ExamplePageController._() {
+    _initializeScheduler();
+  }
 
   // Getters for state (GetX reactive)
   bool get isInitializing => _isInitializing.value;
-  bool get isSchedulerInitialized => _announcementService.isInitialized;
+  bool get isSchedulerInitialized => _announcementService != null;
   String? get errorMessage => _errorMessage.value;
   bool get hasError => _errorMessage.value != null;
 
   /// Initialize the announcement scheduler
-  Future<void> initializeScheduler() async {
+  Future<void> _initializeScheduler() async {
     _isInitializing.value = true;
     _errorMessage.value = null;
 
     try {
-      await _announcementService.initialize();
+      _announcementService = await AnnouncementService.create(
+        config: AnnouncementConfig(
+          enableTTS: true,
+          ttsRate: 0.5,
+          ttsPitch: 1.0,
+          ttsVolume: 1.0,
+          enableDebugLogging: true,
+          forceTimezone: true, // Use the timezone from settings
+          timezoneLocation: 'America/Halifax',
+          notificationConfig: NotificationConfig(
+            channelId: 'example_announcements',
+            channelName: 'Example Announcements',
+            channelDescription: 'Example scheduled announcements',
+          ),
+          validationConfig: const ValidationConfig(
+            maxNotificationsPerDay: 5,
+            maxScheduledNotifications: 20,
+          ),
+        ),
+      );
 
       // Listen to status updates
-      _announcementService.statusStream?.listen((status) {
+      _announcementService!.statusStream.listen((status) {
         debugPrint('Announcement status: $status');
       });
     } catch (e) {
@@ -44,8 +74,10 @@ class ExamplePageController extends GetxController {
   Future<bool> scheduleExampleAnnouncements() async {
     _errorMessage.value = null;
 
+    if (_announcementService == null) return false;
+
     try {
-      await _announcementService.scheduleExampleAnnouncements();
+      await _announcementService!.scheduleExampleAnnouncements();
       return true;
     } catch (e) {
       _errorMessage.value = 'Failed to schedule announcements: $e';
@@ -57,8 +89,10 @@ class ExamplePageController extends GetxController {
   Future<bool> cancelAllAnnouncements() async {
     _errorMessage.value = null;
 
+    if (_announcementService == null) return false;
+
     try {
-      await _announcementService.cancelAllAnnouncements();
+      await _announcementService!.cancelAllAnnouncements();
       return true;
     } catch (e) {
       _errorMessage.value = 'Failed to cancel announcements: $e';
@@ -70,8 +104,10 @@ class ExamplePageController extends GetxController {
   Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
     _errorMessage.value = null;
 
+    if (_announcementService == null) return [];
+
     try {
-      return await _announcementService.getScheduledAnnouncements();
+      return await _announcementService!.getScheduledAnnouncements();
     } catch (e) {
       _errorMessage.value = 'Failed to load announcements: $e';
       return [];
@@ -80,7 +116,7 @@ class ExamplePageController extends GetxController {
 
   @override
   void onClose() {
-    _announcementService.dispose();
+    _announcementService?.dispose();
     super.onClose();
   }
 }

@@ -32,7 +32,7 @@ import 'services/scheduling_settings_service.dart';
 ///
 /// ```dart
 /// // Initialize the scheduler
-/// final scheduler = await AnnouncementScheduler.initialize(
+/// final scheduler = await AnnouncementScheduler.create(
 ///   config: AnnouncementConfig(
 ///     notificationConfig: NotificationConfig(
 ///       channelId: 'my_announcements',

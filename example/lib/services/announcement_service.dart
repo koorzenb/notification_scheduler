@@ -5,14 +5,34 @@ import 'package:permission_handler/permission_handler.dart';
 /// Service class that encapsulates all AnnouncementScheduler operations
 /// Follows the Service/Repository pattern to separate data access from UI
 class AnnouncementService {
-  AnnouncementScheduler? _scheduler;
+  final AnnouncementScheduler _scheduler;
 
-  bool get isInitialized => _scheduler != null;
+  // Private constructor
+  AnnouncementService._(this._scheduler);
 
-  Stream<AnnouncementStatus>? get statusStream => _scheduler?.statusStream;
+  /// Create and initialize the AnnouncementService
+  static Future<AnnouncementService> create({
+    required AnnouncementConfig config,
+  }) async {
+    // Check notification permissions first
+    final hasPermission = await _checkAndRequestNotificationPermissions();
+
+    if (!hasPermission) {
+      debugPrint(
+        '[AnnouncementService] Cannot initialize scheduler - notification permission not granted',
+      );
+      throw Exception('Notification permission not granted');
+    }
+
+    final scheduler = await AnnouncementScheduler.create(config: config);
+
+    return AnnouncementService._(scheduler);
+  }
+
+  Stream<AnnouncementStatus> get statusStream => _scheduler.statusStream;
 
   /// Check and request notification permissions
-  Future<bool> checkAndRequestNotificationPermissions() async {
+  static Future<bool> _checkAndRequestNotificationPermissions() async {
     // Check if notification permission is granted
     var status = await Permission.notification.status;
 
@@ -34,48 +54,10 @@ class AnnouncementService {
     return isGranted;
   }
 
-  /// Initialize the announcement scheduler with default configuration
-  Future<void> initialize() async {
-    // Check notification permissions first
-    final hasPermission = await checkAndRequestNotificationPermissions();
-
-    if (!hasPermission) {
-      debugPrint(
-        '[AnnouncementService] Cannot initialize scheduler - notification permission not granted',
-      );
-      throw Exception('Notification permission not granted');
-    }
-
-    _scheduler = await AnnouncementScheduler.create(
-      config: AnnouncementConfig(
-        enableTTS: true,
-        ttsRate: 0.5,
-        ttsPitch: 1.0,
-        ttsVolume: 1.0,
-        enableDebugLogging: true,
-        forceTimezone: true, // Use the timezone from settings
-        timezoneLocation: 'America/Halifax',
-        notificationConfig: NotificationConfig(
-          channelId: 'example_announcements',
-          channelName: 'Example Announcements',
-          channelDescription: 'Example scheduled announcements',
-        ),
-        validationConfig: const ValidationConfig(
-          maxNotificationsPerDay: 5,
-          maxScheduledNotifications: 20,
-        ),
-      ),
-    );
-  }
-
   /// Schedule predefined example announcements
   Future<void> scheduleExampleAnnouncements() async {
-    if (_scheduler == null) {
-      throw Exception('Scheduler not initialized');
-    }
-
     // Schedule a daily morning motivation
-    await _scheduler!.scheduleAnnouncement(
+    await _scheduler.scheduleAnnouncement(
       content: 'Good morning! Time to start your day with positive energy!',
       announcementTime: const TimeOfDay(hour: 8, minute: 0),
       recurrence: RecurrencePattern.daily,
@@ -83,7 +65,7 @@ class AnnouncementService {
     );
 
     // Schedule a weekday work reminder
-    await _scheduler!.scheduleAnnouncement(
+    await _scheduler.scheduleAnnouncement(
       content: 'Don\'t forget to review your daily goals and priorities.',
       announcementTime: const TimeOfDay(hour: 9, minute: 30),
       recurrence: RecurrencePattern.weekdays,
@@ -91,7 +73,7 @@ class AnnouncementService {
     );
 
     // Schedule a one-time reminder
-    await _scheduler!.scheduleOneTimeAnnouncement(
+    await _scheduler.scheduleOneTimeAnnouncement(
       content:
           'This is a one-time announcement scheduled for 5 seconds from now.',
       dateTime: DateTime.now().add(const Duration(seconds: 5)),
@@ -101,23 +83,16 @@ class AnnouncementService {
 
   /// Cancel all scheduled announcements
   Future<void> cancelAllAnnouncements() async {
-    if (_scheduler == null) {
-      throw Exception('Scheduler not initialized');
-    }
-    await _scheduler!.cancelScheduledAnnouncements();
+    await _scheduler.cancelScheduledAnnouncements();
   }
 
   /// Get all scheduled announcements
   Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
-    if (_scheduler == null) {
-      throw Exception('Scheduler not initialized');
-    }
-    return await _scheduler!.getScheduledAnnouncements();
+    return await _scheduler.getScheduledAnnouncements();
   }
 
   /// Dispose of the scheduler resources
   void dispose() {
-    _scheduler?.dispose();
-    _scheduler = null;
+    _scheduler.dispose();
   }
 }

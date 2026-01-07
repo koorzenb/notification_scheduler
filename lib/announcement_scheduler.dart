@@ -9,7 +9,7 @@
 /// ```dart
 /// import 'package:announcement_scheduler/announcement_scheduler.dart';
 ///
-/// final scheduler = await AnnouncementScheduler.initialize(
+/// final scheduler = await AnnouncementScheduler.create(
 ///   config: AnnouncementConfig(
 ///     notificationConfig: NotificationConfig(
 ///       channelId: 'my_announcements',
