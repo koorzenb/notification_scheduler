@@ -1,16 +1,26 @@
-import 'package:announcement_scheduler/announcement_scheduler.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-/// Service class that encapsulates all AnnouncementScheduler operations
-/// Follows the Service/Repository pattern to separate data access from UI
+import '../announcement_scheduler.dart';
+import '../models/announcement_config.dart';
+import '../models/announcement_status.dart';
+import '../models/recurrence_pattern.dart';
+import '../models/scheduled_announcement.dart';
+
+/// Service class that encapsulates all [AnnouncementScheduler] operations.
+///
+/// Follows the Service/Repository pattern to separate data access from UI.
+/// This service handles permission requests before initializing the scheduler.
 class AnnouncementService {
   final AnnouncementScheduler _scheduler;
 
   // Private constructor
   AnnouncementService._(this._scheduler);
 
-  /// Create and initialize the AnnouncementService
+  /// Create and initialize the [AnnouncementService].
+  ///
+  /// This method will check for notification permissions and request them if needed.
+  /// Throws an [Exception] if permissions are not granted.
   static Future<AnnouncementService> create({
     required AnnouncementConfig config,
   }) async {
@@ -29,9 +39,10 @@ class AnnouncementService {
     return AnnouncementService._(scheduler);
   }
 
+  /// Stream of status updates from the scheduler.
   Stream<AnnouncementStatus> get statusStream => _scheduler.statusStream;
 
-  /// Check and request notification permissions
+  /// Check and request notification permissions.
   static Future<bool> _checkAndRequestNotificationPermissions() async {
     // Check if notification permission is granted
     var status = await Permission.notification.status;
@@ -47,6 +58,7 @@ class AnnouncementService {
         '[AnnouncementService] Notification permission permanently denied. Opening app settings...',
       );
       // User has permanently denied permission, open app settings
+      await openAppSettings();
       return false;
     }
 
@@ -54,34 +66,7 @@ class AnnouncementService {
     return isGranted;
   }
 
-  /// Schedule predefined example announcements
-  Future<void> scheduleExampleAnnouncements() async {
-    // Schedule a daily morning motivation
-    await _scheduler.scheduleAnnouncement(
-      content: 'Good morning! Time to start your day with positive energy!',
-      announcementTime: const TimeOfDay(hour: 8, minute: 0),
-      recurrence: RecurrencePattern.daily,
-      metadata: {'type': 'motivation', 'category': 'morning'},
-    );
-
-    // Schedule a weekday work reminder
-    await _scheduler.scheduleAnnouncement(
-      content: 'Don\'t forget to review your daily goals and priorities.',
-      announcementTime: const TimeOfDay(hour: 9, minute: 30),
-      recurrence: RecurrencePattern.weekdays,
-      metadata: {'type': 'productivity', 'category': 'work'},
-    );
-
-    // Schedule a one-time reminder
-    await _scheduler.scheduleOneTimeAnnouncement(
-      content:
-          'This is a one-time announcement scheduled for 5 seconds from now.',
-      dateTime: DateTime.now().add(const Duration(seconds: 5)),
-      metadata: {'type': 'reminder', 'category': 'test'},
-    );
-  }
-
-  /// Schedule a one-time announcement
+  /// Schedule a one-time announcement.
   Future<int> scheduleOnceOff({
     required String content,
     required DateTime dateTime,
@@ -94,7 +79,7 @@ class AnnouncementService {
     );
   }
 
-  /// Schedule a daily recurrent announcement
+  /// Schedule a daily recurrent announcement.
   Future<int> scheduleDaily({
     required String content,
     required TimeOfDay time,
@@ -108,8 +93,9 @@ class AnnouncementService {
     );
   }
 
-  /// Schedule a weekly announcement on specific days
-  /// [weekdays] should be a list of integers where 1=Monday, 7=Sunday
+  /// Schedule a weekly announcement on specific days.
+  ///
+  /// [weekdays] should be a list of integers where 1=Monday, 7=Sunday.
   Future<int> scheduleWeekly({
     required String content,
     required TimeOfDay time,
@@ -125,17 +111,17 @@ class AnnouncementService {
     );
   }
 
-  /// Cancel all scheduled announcements
+  /// Cancel all scheduled announcements.
   Future<void> cancelAllAnnouncements() async {
     await _scheduler.cancelScheduledAnnouncements();
   }
 
-  /// Get all scheduled announcements
+  /// Get all scheduled announcements.
   Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
     return await _scheduler.getScheduledAnnouncements();
   }
 
-  /// Dispose of the scheduler resources
+  /// Dispose of the scheduler resources.
   void dispose() {
     _scheduler.dispose();
   }

@@ -40,3 +40,4 @@ export 'src/models/notification_config.dart';
 export 'src/models/recurrence_pattern.dart';
 export 'src/models/scheduled_announcement.dart';
 export 'src/models/validation_config.dart';
+export 'src/services/announcement_service.dart';
