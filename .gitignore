@@ -58,3 +58,8 @@ app.*.map.json
 **/macos/**
 **/linux/**
 **/windows/**
+
+# Scripts
+set-build-env.bat
+update_version.dart
+update-flutter-info.bat
