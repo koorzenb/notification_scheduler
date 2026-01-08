@@ -1,6 +1,13 @@
 
 # Changelog
 
+
+## [1.0.1] - 2026-01-08
+  
+### Chore
+  
+- Add android platform support to pubspec.yaml
+
 ## [1.0.0] - 2026-01-08
 
 ### Added
