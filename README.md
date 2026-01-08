@@ -21,7 +21,7 @@ Add this package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  announcement_scheduler: ^0.1.0
+  notification_scheduler: ^0.1.0
 ```
 
 Then run:
