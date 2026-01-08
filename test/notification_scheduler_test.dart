@@ -1,5 +1,5 @@
-import 'package:announcement_scheduler/announcement_scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notification_scheduler/notification_scheduler.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -222,14 +222,14 @@ void main() {
     });
 
     test('ScheduledAnnouncement identifies recurring vs one-time', () {
-      final recurring = ScheduledAnnouncement(
+      final recurring = ScheduledNotification(
         id: 1,
         content: 'Test',
         scheduledTime: DateTime.now(),
         recurrence: RecurrencePattern.daily,
       );
 
-      final oneTime = ScheduledAnnouncement(
+      final oneTime = ScheduledNotification(
         id: 2,
         content: 'Test',
         scheduledTime: DateTime.now(),
@@ -258,14 +258,14 @@ void main() {
     });
 
     test('ScheduledAnnouncement returns effective days correctly', () {
-      final daily = ScheduledAnnouncement(
+      final daily = ScheduledNotification(
         id: 1,
         content: 'Test',
         scheduledTime: DateTime.now(),
         recurrence: RecurrencePattern.daily,
       );
 
-      final custom = ScheduledAnnouncement(
+      final custom = ScheduledNotification(
         id: 2,
         content: 'Test',
         scheduledTime: DateTime.now(),
@@ -273,7 +273,7 @@ void main() {
         customDays: [1, 3, 5],
       );
 
-      final oneTime = ScheduledAnnouncement(
+      final oneTime = ScheduledNotification(
         id: 3,
         content: 'Test',
         scheduledTime: DateTime.now(),
@@ -302,22 +302,22 @@ void main() {
 
     test('AnnouncementStatus has display names', () {
       expect(
-        AnnouncementStatus.scheduled.displayName,
+        NotificationStatus.scheduled.displayName,
         'Scheduled',
         reason: 'Scheduled status should have display name',
       );
       expect(
-        AnnouncementStatus.delivering.displayName,
+        NotificationStatus.delivering.displayName,
         'Delivering',
         reason: 'Delivering status should have display name',
       );
       expect(
-        AnnouncementStatus.completed.displayName,
+        NotificationStatus.completed.displayName,
         'Completed',
         reason: 'Completed status should have display name',
       );
       expect(
-        AnnouncementStatus.failed.displayName,
+        NotificationStatus.failed.displayName,
         'Failed',
         reason: 'Failed status should have display name',
       );
@@ -325,85 +325,85 @@ void main() {
 
     test('AnnouncementStatus identifies active vs complete states', () {
       expect(
-        AnnouncementStatus.scheduled.isActive,
+        NotificationStatus.scheduled.isActive,
         true,
         reason: 'Scheduled should be active',
       );
       expect(
-        AnnouncementStatus.delivering.isActive,
+        NotificationStatus.delivering.isActive,
         true,
         reason: 'Delivering should be active',
       );
       expect(
-        AnnouncementStatus.completed.isActive,
+        NotificationStatus.completed.isActive,
         false,
         reason: 'Completed should not be active',
       );
       expect(
-        AnnouncementStatus.failed.isActive,
+        NotificationStatus.failed.isActive,
         false,
         reason: 'Failed should not be active',
       );
 
       expect(
-        AnnouncementStatus.scheduled.isComplete,
+        NotificationStatus.scheduled.isComplete,
         false,
         reason: 'Scheduled should not be complete',
       );
       expect(
-        AnnouncementStatus.delivering.isComplete,
+        NotificationStatus.delivering.isComplete,
         false,
         reason: 'Delivering should not be complete',
       );
       expect(
-        AnnouncementStatus.completed.isComplete,
+        NotificationStatus.completed.isComplete,
         true,
         reason: 'Completed should be complete',
       );
       expect(
-        AnnouncementStatus.failed.isComplete,
+        NotificationStatus.failed.isComplete,
         true,
         reason: 'Failed should be complete',
       );
     });
 
     test('Exceptions have appropriate messages', () {
-      const permissionDenied = NotificationPermissionDeniedException();
+      final permissionDenied = NotificationPermissionDeniedException();
       expect(
         permissionDenied.message,
         contains('permission denied'),
         reason: 'Permission denied exception should have descriptive message',
       );
 
-      const initError = NotificationInitializationException('Init failed');
+      final initError = NotificationInitializationException('Init failed');
       expect(
         initError.message,
         'Init failed',
         reason: 'Should preserve custom error message',
       );
 
-      const validation = ValidationException('Invalid input');
+      final validation = ValidationException('Invalid input');
       expect(
         validation.message,
         'Invalid input',
         reason: 'Should preserve validation message',
       );
 
-      const ttsInit = TTSInitializationException('TTS unavailable');
+      final ttsInit = TTSInitializationException('TTS unavailable');
       expect(
         ttsInit.message,
         'TTS unavailable',
         reason: 'Should preserve TTS error message',
       );
 
-      const ttsAnnounce = TTSAnnouncementException('Speech failed');
+      final ttsAnnounce = TTSAnnouncementException('Speech failed');
       expect(
         ttsAnnounce.message,
         'Speech failed',
         reason: 'Should preserve TTS announcement error message',
       );
 
-      const scheduling = NotificationSchedulingException('Scheduling failed');
+      final scheduling = NotificationSchedulingException('Scheduling failed');
       expect(
         scheduling.message,
         'Scheduling failed',
@@ -413,32 +413,32 @@ void main() {
 
     test('All exceptions extend AnnouncementException', () {
       expect(
-        const NotificationPermissionDeniedException(),
+        NotificationPermissionDeniedException(),
         isA<AnnouncementException>(),
         reason: 'Should extend base exception',
       );
       expect(
-        const NotificationInitializationException('test'),
+        NotificationInitializationException('test'),
         isA<AnnouncementException>(),
         reason: 'Should extend base exception',
       );
       expect(
-        const ValidationException('test'),
+        ValidationException('test'),
         isA<AnnouncementException>(),
         reason: 'Should extend base exception',
       );
       expect(
-        const TTSInitializationException('test'),
+        TTSInitializationException('test'),
         isA<AnnouncementException>(),
         reason: 'Should extend base exception',
       );
       expect(
-        const TTSAnnouncementException('test'),
+        TTSAnnouncementException('test'),
         isA<AnnouncementException>(),
         reason: 'Should extend base exception',
       );
       expect(
-        const NotificationSchedulingException('test'),
+        NotificationSchedulingException('test'),
         isA<AnnouncementException>(),
         reason: 'Should extend base exception',
       );
@@ -449,7 +449,7 @@ void main() {
     test('Public API exports are accessible', () {
       // Verify all expected types are exported and accessible
       expect(
-        AnnouncementScheduler,
+        NotificationScheduler,
         isNotNull,
         reason: 'AnnouncementScheduler should be exported',
       );
@@ -469,7 +469,7 @@ void main() {
         reason: 'ValidationConfig should be exported',
       );
       expect(
-        ScheduledAnnouncement,
+        ScheduledNotification,
         isNotNull,
         reason: 'ScheduledAnnouncement should be exported',
       );
@@ -479,7 +479,7 @@ void main() {
         reason: 'RecurrencePattern should be exported',
       );
       expect(
-        AnnouncementStatus,
+        NotificationStatus,
         isNotNull,
         reason: 'AnnouncementStatus should be exported',
       );

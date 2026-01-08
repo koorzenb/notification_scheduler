@@ -1,7 +1,7 @@
-/// Status of an announcement during its lifecycle.
+/// Status of a notification during its lifecycle.
 ///
-/// Represents the different states an announcement can be in from creation
-/// to delivery. Use these status values to track announcement progress and
+/// Represents the different states a notification can be in from creation
+/// to delivery. Use these status values to track notification progress and
 /// handle different scenarios in your application.
 ///
 /// ## Lifecycle Flow
@@ -17,23 +17,23 @@
 /// // Listen to status updates
 /// scheduler.statusStream.listen((status) {
 ///   switch (status) {
-///     case AnnouncementStatus.scheduled:
+///     case NotificationStatus.scheduled:
 ///       print('✓ Announcement scheduled');
 ///       showSnackBar('Announcement scheduled successfully');
 ///       break;
 ///
-///     case AnnouncementStatus.delivering:
+///     case NotificationStatus.delivering:
 ///       print('📢 Delivering announcement...');
 ///       showLoadingIndicator();
 ///       break;
 ///
-///     case AnnouncementStatus.completed:
+///     case NotificationStatus.completed:
 ///       print('✅ Announcement delivered');
 ///       hideLoadingIndicator();
 ///       logSuccess();
 ///       break;
 ///
-///     case AnnouncementStatus.failed:
+///     case NotificationStatus.failed:
 ///       print('❌ Announcement failed');
 ///       hideLoadingIndicator();
 ///       showErrorDialog();
@@ -44,9 +44,9 @@
 ///
 /// See also:
 ///
-/// - [AnnouncementStatusExtension] for utility methods
-/// - [AnnouncementScheduler.statusStream] for status updates
-enum AnnouncementStatus {
+/// - [NotificationStatusExtension] for utility methods
+/// - [NotificationScheduler.statusStream] for status updates
+enum NotificationStatus {
   /// Announcement is scheduled and waiting to be delivered.
   ///
   /// The announcement has been successfully scheduled with the notification
@@ -72,23 +72,23 @@ enum AnnouncementStatus {
 }
 
 /// Extension methods for AnnouncementStatus
-extension AnnouncementStatusExtension on AnnouncementStatus {
+extension NotificationStatusExtension on NotificationStatus {
   String get displayName {
     switch (this) {
-      case AnnouncementStatus.scheduled:
+      case NotificationStatus.scheduled:
         return 'Scheduled';
-      case AnnouncementStatus.delivering:
+      case NotificationStatus.delivering:
         return 'Delivering';
-      case AnnouncementStatus.completed:
+      case NotificationStatus.completed:
         return 'Completed';
-      case AnnouncementStatus.failed:
+      case NotificationStatus.failed:
         return 'Failed';
     }
   }
 
   bool get isActive =>
-      this == AnnouncementStatus.scheduled ||
-      this == AnnouncementStatus.delivering;
+      this == NotificationStatus.scheduled ||
+      this == NotificationStatus.delivering;
   bool get isComplete =>
-      this == AnnouncementStatus.completed || this == AnnouncementStatus.failed;
+      this == NotificationStatus.completed || this == NotificationStatus.failed;
 }

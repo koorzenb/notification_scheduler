@@ -1,9 +1,9 @@
-import 'package:announcement_scheduler/announcement_scheduler.dart';
-import 'package:announcement_scheduler/src/services/core_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:notification_scheduler/notification_scheduler.dart';
+import 'package:notification_scheduler/src/services/core_notification_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'core_notification_service_test.mocks.dart';

@@ -1,13 +1,13 @@
-import 'package:announcement_scheduler/announcement_scheduler.dart';
-import 'package:announcement_scheduler/src/services/core_notification_service.dart';
-import 'package:announcement_scheduler/src/services/scheduling_settings_service.dart';
-import 'package:announcement_scheduler/src/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:notification_scheduler/notification_scheduler.dart';
+import 'package:notification_scheduler/src/services/core_notification_service.dart';
+import 'package:notification_scheduler/src/services/scheduling_settings_service.dart';
+import 'package:notification_scheduler/src/services/storage_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'integration_test.mocks.dart';
@@ -22,7 +22,7 @@ void main() {
     late SchedulingSettingsService settingsService;
     late MockFlutterLocalNotificationsPlugin mockNotifications;
     late MockFlutterTts mockTts;
-    late AnnouncementScheduler scheduler;
+    late NotificationScheduler scheduler;
 
     late List<PendingNotificationRequest> pendingNotifications;
 
@@ -112,7 +112,7 @@ void main() {
       // We need to initialize the core service manually since we are injecting it
       await coreService.initialize();
 
-      scheduler = await AnnouncementScheduler.create(
+      scheduler = await NotificationScheduler.create(
         config: effectiveConfig,
         notificationService: coreService,
       );
@@ -338,7 +338,7 @@ void main() {
 
       // Add directly to storage to simulate "stale" data (e.g. app crash before cleanup)
       await settingsService.addScheduledAnnouncement(
-        ScheduledAnnouncement(
+        ScheduledNotification(
           id: 5001,
           content: 'Stale',
           scheduledTime: DateTime.now(),

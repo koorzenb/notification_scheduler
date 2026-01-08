@@ -54,8 +54,8 @@ import 'recurrence_pattern.dart';
 /// See also:
 ///
 /// - [RecurrencePattern] for recurring announcement patterns
-/// - [AnnouncementScheduler.scheduleAnnouncement] to create announcements
-class ScheduledAnnouncement {
+/// - [NotificationScheduler.scheduleAnnouncement] to create announcements
+class ScheduledNotification {
   /// Unique identifier for the announcement
   final int id;
 
@@ -77,7 +77,7 @@ class ScheduledAnnouncement {
   /// Optional metadata associated with the announcement
   final Map<String, dynamic>? metadata;
 
-  const ScheduledAnnouncement({
+  const ScheduledNotification({
     required this.id,
     required this.content,
     required this.scheduledTime,
@@ -87,13 +87,13 @@ class ScheduledAnnouncement {
     this.metadata,
   });
 
-  /// Creates a [ScheduledAnnouncement] from a JSON map
+  /// Creates a [ScheduledNotification] from a JSON map
   ///
   /// Deserializes a Map`<`String, dynamic`>` previously created by [toJson].
   /// Handles all nullable fields gracefully with safe defaults.
   ///
   /// Throws [ArgumentError] if required fields are missing or invalid.
-  factory ScheduledAnnouncement.fromJson(Map<String, dynamic> json) {
+  factory ScheduledNotification.fromJson(Map<String, dynamic> json) {
     // Validate required fields
     if (!json.containsKey('id') || json['id'] == null) {
       throw ArgumentError('Required field "id" is missing or null');
@@ -128,7 +128,7 @@ class ScheduledAnnouncement {
       metadata = Map<String, dynamic>.from(json['metadata'] as Map);
     }
 
-    return ScheduledAnnouncement(
+    return ScheduledNotification(
       id: json['id'] as int,
       content: json['content'] as String,
       scheduledTime: DateTime.fromMillisecondsSinceEpoch(
@@ -161,7 +161,7 @@ class ScheduledAnnouncement {
   }
 
   /// Creates a copy of this announcement with the given fields replaced
-  ScheduledAnnouncement copyWith({
+  ScheduledNotification copyWith({
     int? id,
     String? content,
     DateTime? scheduledTime,
@@ -170,7 +170,7 @@ class ScheduledAnnouncement {
     bool? isActive,
     Map<String, dynamic>? metadata,
   }) {
-    return ScheduledAnnouncement(
+    return ScheduledNotification(
       id: id ?? this.id,
       content: content ?? this.content,
       scheduledTime: scheduledTime ?? this.scheduledTime,
@@ -199,7 +199,7 @@ class ScheduledAnnouncement {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ScheduledAnnouncement &&
+      other is ScheduledNotification &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           content == other.content &&

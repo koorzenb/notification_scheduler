@@ -1,11 +1,11 @@
-import 'package:announcement_scheduler/announcement_scheduler.dart';
-import 'package:announcement_scheduler/src/services/core_notification_service.dart';
-import 'package:announcement_scheduler/src/services/scheduling_settings_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:notification_scheduler/notification_scheduler.dart';
+import 'package:notification_scheduler/src/services/core_notification_service.dart';
+import 'package:notification_scheduler/src/services/scheduling_settings_service.dart';
 
 import 'core_notification_service_retrieval_test.mocks.dart';
 
@@ -46,13 +46,13 @@ void main() {
       'retrieves announcements and filters based on pending notifications',
       () async {
         // Arrange
-        final announcement1 = ScheduledAnnouncement(
+        final announcement1 = ScheduledNotification(
           id: 1,
           content: 'Test 1',
           scheduledTime: DateTime.now(),
           isActive: true,
         );
-        final announcement2 = ScheduledAnnouncement(
+        final announcement2 = ScheduledNotification(
           id: 2,
           content: 'Test 2',
           scheduledTime: DateTime.now(),
@@ -93,13 +93,13 @@ void main() {
 
     test('cleans up stale announcements (stored but not pending)', () async {
       // Arrange
-      final announcement1 = ScheduledAnnouncement(
+      final announcement1 = ScheduledNotification(
         id: 1,
         content: 'Active',
         scheduledTime: DateTime.now(),
         isActive: true,
       );
-      final announcement2 = ScheduledAnnouncement(
+      final announcement2 = ScheduledNotification(
         id: 2,
         content: 'Stale',
         scheduledTime: DateTime.now(),
@@ -130,7 +130,7 @@ void main() {
 
     test('handles orphan notifications (pending but not stored)', () async {
       // Arrange
-      final announcement1 = ScheduledAnnouncement(
+      final announcement1 = ScheduledNotification(
         id: 1,
         content: 'Active',
         scheduledTime: DateTime.now(),
@@ -175,13 +175,13 @@ void main() {
       'cleans up all announcements when no pending notifications exist',
       () async {
         // Arrange
-        final announcement1 = ScheduledAnnouncement(
+        final announcement1 = ScheduledNotification(
           id: 1,
           content: 'Stale 1',
           scheduledTime: DateTime.now(),
           isActive: true,
         );
-        final announcement2 = ScheduledAnnouncement(
+        final announcement2 = ScheduledNotification(
           id: 2,
           content: 'Stale 2',
           scheduledTime: DateTime.now(),
@@ -218,19 +218,19 @@ void main() {
       final later = now.add(const Duration(hours: 1));
       final earlier = now.subtract(const Duration(hours: 1));
 
-      final announcement1 = ScheduledAnnouncement(
+      final announcement1 = ScheduledNotification(
         id: 1,
         content: 'Later',
         scheduledTime: later,
         isActive: true,
       );
-      final announcement2 = ScheduledAnnouncement(
+      final announcement2 = ScheduledNotification(
         id: 2,
         content: 'Earlier',
         scheduledTime: earlier,
         isActive: true,
       );
-      final announcement3 = ScheduledAnnouncement(
+      final announcement3 = ScheduledNotification(
         id: 3,
         content: 'Now',
         scheduledTime: now,

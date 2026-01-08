@@ -6,16 +6,16 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'models/announcement_config.dart';
 import 'models/announcement_exceptions.dart';
-import 'models/announcement_status.dart';
+import 'models/notification_status.dart';
 import 'models/recurrence_pattern.dart';
-import 'models/scheduled_announcement.dart';
+import 'models/scheduled_notification.dart';
 import 'services/core_notification_service.dart';
 import 'services/hive_storage_service.dart';
 import 'services/scheduling_settings_service.dart';
 
 /// Main entry point for the announcement scheduler package.
 ///
-/// [AnnouncementScheduler] provides a clean API for scheduling both one-time
+/// [NotificationScheduler] provides a clean API for scheduling both one-time
 /// and recurring text-to-speech announcements using local notifications.
 ///
 /// ## Features
@@ -79,9 +79,9 @@ import 'services/scheduling_settings_service.dart';
 ///
 /// - [AnnouncementConfig] for configuration options
 /// - [RecurrencePattern] for recurring announcement patterns
-/// - [ScheduledAnnouncement] for announcement data model
-/// - [AnnouncementStatus] for announcement lifecycle states
-class AnnouncementScheduler {
+/// - [ScheduledNotification] for announcement data model
+/// - [NotificationStatus] for announcement lifecycle states
+class NotificationScheduler {
   final AnnouncementConfig _config;
   final CoreNotificationService? _notificationService;
   DateTime Function(
@@ -92,7 +92,7 @@ class AnnouncementScheduler {
   )
   _calculateNextOccurrence;
 
-  AnnouncementScheduler._({
+  NotificationScheduler._({
     required AnnouncementConfig config,
     CoreNotificationService? notificationService,
     DateTime Function(
@@ -109,7 +109,7 @@ class AnnouncementScheduler {
 
   /// Initialize the announcement scheduler with the given configuration.
   ///
-  /// This is the primary factory method for creating an [AnnouncementScheduler]
+  /// This is the primary factory method for creating an [NotificationScheduler]
   /// instance. It must be called before any scheduling operations.
   ///
   /// The method performs the following initialization steps:
@@ -132,7 +132,7 @@ class AnnouncementScheduler {
   ///
   /// ## Returns
   ///
-  /// A [Future] that completes with a fully initialized [AnnouncementScheduler]
+  /// A [Future] that completes with a fully initialized [NotificationScheduler]
   /// instance ready to schedule announcements.
   ///
   /// ## Throws
@@ -168,7 +168,7 @@ class AnnouncementScheduler {
   /// - [AnnouncementConfig] for configuration details
   /// - [NotificationConfig] for notification channel settings
   /// - [ValidationConfig] for validation rules
-  static Future<AnnouncementScheduler> create({
+  static Future<NotificationScheduler> create({
     required AnnouncementConfig config,
     CoreNotificationService? notificationService,
   }) async {
@@ -205,7 +205,7 @@ class AnnouncementScheduler {
       await service.initialize();
     }
 
-    return AnnouncementScheduler._(
+    return NotificationScheduler._(
       config: config,
       notificationService: service,
     );
@@ -311,18 +311,18 @@ class AnnouncementScheduler {
     currentTime ??= DateTime.now();
     // Validate content
     if (content.trim().isEmpty) {
-      throw const ValidationException('Announcement content cannot be empty');
+      throw ValidationException('Announcement content cannot be empty');
     }
 
     // Validate custom days if using custom recurrence
     if (recurrence == RecurrencePattern.custom) {
       if (customDays == null || customDays.isEmpty) {
-        throw const ValidationException(
+        throw ValidationException(
           'Custom days must be provided when using custom recurrence pattern',
         );
       }
       if (customDays.any((day) => day < 1 || day > 7)) {
-        throw const ValidationException(
+        throw ValidationException(
           'Custom days must be between 1 (Monday) and 7 (Sunday)',
         );
       }
@@ -419,12 +419,12 @@ class AnnouncementScheduler {
   }) async {
     // Validate content
     if (content.trim().isEmpty) {
-      throw const ValidationException('Announcement content cannot be empty');
+      throw ValidationException('Announcement content cannot be empty');
     }
 
     // Validate date is in the future
     if (dateTime.isBefore(DateTime.now())) {
-      throw const ValidationException('Scheduled time must be in the future');
+      throw ValidationException('Scheduled time must be in the future');
     }
 
     // Generate ID if not provided
@@ -526,7 +526,7 @@ class AnnouncementScheduler {
   ///
   /// ## Returns
   ///
-  /// A [Future] that completes with a list of [ScheduledAnnouncement] objects
+  /// A [Future] that completes with a list of [ScheduledNotification] objects
   /// representing all currently scheduled announcements.
   ///
   /// ## Example
@@ -545,9 +545,9 @@ class AnnouncementScheduler {
   ///
   /// See also:
   ///
-  /// - [ScheduledAnnouncement] for the announcement data model
+  /// - [ScheduledNotification] for the announcement data model
   /// - [cancelAnnouncementById] to cancel specific announcements
-  Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
+  Future<List<ScheduledNotification>> getScheduledAnnouncements() async {
     return await _notificationService!.getScheduledAnnouncements();
   }
 
@@ -557,7 +557,7 @@ class AnnouncementScheduler {
   /// lifecycle events such as when announcements are scheduled, delivering,
   /// completed, or failed.
   ///
-  /// The stream emits [AnnouncementStatus] values indicating the current
+  /// The stream emits [NotificationStatus] values indicating the current
   /// state of announcements. This is useful for:
   ///
   /// - Displaying real-time status in the UI
@@ -589,13 +589,13 @@ class AnnouncementScheduler {
   ///
   /// See also:
   ///
-  /// - [AnnouncementStatus] for status values and their meanings
-  Stream<AnnouncementStatus> get statusStream =>
+  /// - [NotificationStatus] for status values and their meanings
+  Stream<NotificationStatus> get statusStream =>
       _notificationService!.statusStream;
 
   /// Dispose resources and clean up.
   ///
-  /// This method should be called when the [AnnouncementScheduler] is no
+  /// This method should be called when the [NotificationScheduler] is no
   /// longer needed. It performs cleanup including:
   ///
   /// - Closing the status stream
@@ -603,7 +603,7 @@ class AnnouncementScheduler {
   /// - Canceling active timers
   /// - Releasing system resources
   ///
-  /// After calling [dispose], the [AnnouncementScheduler] instance should not
+  /// After calling [dispose], the [NotificationScheduler] instance should not
   /// be used anymore. Create a new instance via [create] if needed.
   ///
   /// Note: This does NOT cancel scheduled announcements. Call

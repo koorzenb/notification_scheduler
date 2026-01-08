@@ -1,11 +1,11 @@
-import 'package:announcement_scheduler/src/models/recurrence_pattern.dart';
-import 'package:announcement_scheduler/src/models/scheduled_announcement.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notification_scheduler/src/models/recurrence_pattern.dart';
+import 'package:notification_scheduler/src/models/scheduled_notification.dart';
 
 void main() {
   group('ScheduledAnnouncement Serialization', () {
     test('toJson() serializes all fields correctly', () {
-      final announcement = ScheduledAnnouncement(
+      final announcement = ScheduledNotification(
         id: 123,
         content: 'Test announcement',
         scheduledTime: DateTime(2025, 11, 25, 8, 30),
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('toJson() handles null recurrence', () {
-      final announcement = ScheduledAnnouncement(
+      final announcement = ScheduledNotification(
         id: 456,
         content: 'One-time announcement',
         scheduledTime: DateTime(2025, 11, 25, 10, 0),
@@ -77,7 +77,7 @@ void main() {
     });
 
     test('toJson() handles empty customDays and metadata', () {
-      final announcement = ScheduledAnnouncement(
+      final announcement = ScheduledNotification(
         id: 789,
         content: 'Test with empty collections',
         scheduledTime: DateTime(2025, 11, 25, 14, 0),
@@ -110,7 +110,7 @@ void main() {
         'metadata': {'category': 'health', 'priority': 'high'},
       };
 
-      final announcement = ScheduledAnnouncement.fromJson(json);
+      final announcement = ScheduledNotification.fromJson(json);
 
       expect(
         announcement.id,
@@ -159,7 +159,7 @@ void main() {
         'metadata': null,
       };
 
-      final announcement = ScheduledAnnouncement.fromJson(json);
+      final announcement = ScheduledNotification.fromJson(json);
 
       expect(
         announcement.recurrence,
@@ -185,7 +185,7 @@ void main() {
         'scheduledTime': DateTime(2025, 11, 25, 14, 0).millisecondsSinceEpoch,
       };
 
-      final announcement = ScheduledAnnouncement.fromJson(json);
+      final announcement = ScheduledNotification.fromJson(json);
 
       expect(
         announcement.isActive,
@@ -201,7 +201,7 @@ void main() {
       };
 
       expect(
-        () => ScheduledAnnouncement.fromJson(json),
+        () => ScheduledNotification.fromJson(json),
         throwsA(isA<ArgumentError>()),
         reason: 'fromJson should throw ArgumentError when id is missing',
       );
@@ -214,7 +214,7 @@ void main() {
       };
 
       expect(
-        () => ScheduledAnnouncement.fromJson(json),
+        () => ScheduledNotification.fromJson(json),
         throwsA(isA<ArgumentError>()),
         reason: 'fromJson should throw ArgumentError when content is missing',
       );
@@ -224,7 +224,7 @@ void main() {
       final json = {'id': 123, 'content': 'Missing scheduled time'};
 
       expect(
-        () => ScheduledAnnouncement.fromJson(json),
+        () => ScheduledNotification.fromJson(json),
         throwsA(isA<ArgumentError>()),
         reason:
             'fromJson should throw ArgumentError when scheduledTime is missing',
@@ -232,7 +232,7 @@ void main() {
     });
 
     test('Round-trip serialization preserves data integrity', () {
-      final original = ScheduledAnnouncement(
+      final original = ScheduledNotification(
         id: 1001,
         content: 'Round-trip test',
         scheduledTime: DateTime(2025, 11, 25, 16, 45),
@@ -246,7 +246,7 @@ void main() {
       );
 
       final json = original.toJson();
-      final deserialized = ScheduledAnnouncement.fromJson(json);
+      final deserialized = ScheduledNotification.fromJson(json);
 
       expect(
         deserialized.id,
@@ -286,14 +286,14 @@ void main() {
     });
 
     test('Round-trip serialization with null fields', () {
-      final original = ScheduledAnnouncement(
+      final original = ScheduledNotification(
         id: 1002,
         content: 'Null fields test',
         scheduledTime: DateTime(2025, 11, 25, 18, 0),
       );
 
       final json = original.toJson();
-      final deserialized = ScheduledAnnouncement.fromJson(json);
+      final deserialized = ScheduledNotification.fromJson(json);
 
       expect(
         deserialized.id,
@@ -341,7 +341,7 @@ void main() {
           'recurrence': pattern.index,
         };
 
-        final announcement = ScheduledAnnouncement.fromJson(json);
+        final announcement = ScheduledNotification.fromJson(json);
 
         expect(
           announcement.recurrence,
@@ -352,7 +352,7 @@ void main() {
     });
 
     test('toJson() with various metadata types', () {
-      final announcement = ScheduledAnnouncement(
+      final announcement = ScheduledNotification(
         id: 1003,
         content: 'Metadata test',
         scheduledTime: DateTime(2025, 11, 25, 20, 0),
@@ -367,7 +367,7 @@ void main() {
       );
 
       final json = announcement.toJson();
-      final deserialized = ScheduledAnnouncement.fromJson(json);
+      final deserialized = ScheduledNotification.fromJson(json);
 
       expect(
         deserialized.metadata?['string'],

@@ -1,8 +1,8 @@
-import 'package:announcement_scheduler/announcement_scheduler.dart';
-import 'package:announcement_scheduler/src/services/core_notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:notification_scheduler/notification_scheduler.dart';
+import 'package:notification_scheduler/src/services/core_notification_service.dart';
 
 import 'core_notification_service_retrieval_test.mocks.dart';
 
@@ -46,13 +46,13 @@ void main() {
       'cleanup is triggered when AnnouncementStatus.completed is emitted',
       () async {
         // Arrange
-        final announcement1 = ScheduledAnnouncement(
+        final announcement1 = ScheduledNotification(
           id: 1,
           content: 'Announcement 1',
           scheduledTime: DateTime.now().add(const Duration(hours: 1)),
           isActive: true,
         );
-        final announcement2 = ScheduledAnnouncement(
+        final announcement2 = ScheduledNotification(
           id: 2,
           content: 'Announcement 2',
           scheduledTime: DateTime.now().add(const Duration(hours: 2)),
@@ -105,7 +105,7 @@ void main() {
 
     test('cleanup does not remove active announcements', () async {
       // Arrange
-      final announcement1 = ScheduledAnnouncement(
+      final announcement1 = ScheduledNotification(
         id: 1,
         content: 'Announcement 1',
         scheduledTime: DateTime.now().add(const Duration(hours: 1)),

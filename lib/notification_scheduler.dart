@@ -7,7 +7,7 @@
 ///
 /// Example usage:
 /// ```dart
-/// import 'package:announcement_scheduler/announcement_scheduler.dart';
+/// import 'package:notification_scheduler/announcement_scheduler.dart';
 ///
 /// final scheduler = await AnnouncementScheduler.create(
 ///   config: AnnouncementConfig(
@@ -31,13 +31,13 @@ library;
 export 'package:flutter_local_notifications/flutter_local_notifications.dart'
     show Importance, Priority;
 
-// Export public API
-export 'src/announcement_scheduler.dart';
 export 'src/models/announcement_config.dart';
 export 'src/models/announcement_exceptions.dart';
-export 'src/models/announcement_status.dart';
 export 'src/models/notification_config.dart';
+export 'src/models/notification_status.dart';
 export 'src/models/recurrence_pattern.dart';
-export 'src/models/scheduled_announcement.dart';
+export 'src/models/scheduled_notification.dart';
 export 'src/models/validation_config.dart';
-export 'src/services/announcement_service.dart';
+// Export public API
+export 'src/notification_scheduler.dart';
+export 'src/services/notification_service.dart';

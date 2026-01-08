@@ -1,5 +1,4 @@
-import 'notification_config.dart';
-import 'validation_config.dart';
+import '../../notification_scheduler.dart';
 
 /// Configuration for the announcement scheduler.
 ///

@@ -54,7 +54,7 @@ abstract class AnnouncementException implements Exception {
 /// }
 /// ```
 class NotificationPermissionDeniedException extends AnnouncementException {
-  const NotificationPermissionDeniedException()
+  NotificationPermissionDeniedException()
     : super('Notification permission denied by user');
 }
 
@@ -77,7 +77,7 @@ class NotificationPermissionDeniedException extends AnnouncementException {
 /// }
 /// ```
 class NotificationInitializationException extends AnnouncementException {
-  const NotificationInitializationException(super.message);
+  NotificationInitializationException(super.message);
 }
 
 /// Thrown when scheduling a notification fails.
@@ -99,7 +99,7 @@ class NotificationInitializationException extends AnnouncementException {
 /// }
 /// ```
 class NotificationSchedulingException extends AnnouncementException {
-  const NotificationSchedulingException(super.message);
+  NotificationSchedulingException(super.message);
 }
 
 /// Thrown when TTS (Text-to-Speech) initialization fails.
@@ -121,7 +121,7 @@ class NotificationSchedulingException extends AnnouncementException {
 /// }
 /// ```
 class TTSInitializationException extends AnnouncementException {
-  const TTSInitializationException(super.message);
+  TTSInitializationException(super.message);
 }
 
 /// Thrown when TTS (Text-to-Speech) announcement delivery fails.
@@ -143,7 +143,7 @@ class TTSInitializationException extends AnnouncementException {
 /// }
 /// ```
 class TTSAnnouncementException extends AnnouncementException {
-  const TTSAnnouncementException(super.message);
+  TTSAnnouncementException(super.message);
 }
 
 /// Thrown when input validation fails.
@@ -173,5 +173,5 @@ class TTSAnnouncementException extends AnnouncementException {
 /// }
 /// ```
 class ValidationException extends AnnouncementException {
-  const ValidationException(super.message);
+  ValidationException(super.message);
 }

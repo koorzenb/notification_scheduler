@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../announcement_scheduler.dart';
 import '../models/announcement_config.dart';
-import '../models/announcement_status.dart';
+import '../models/notification_status.dart';
 import '../models/recurrence_pattern.dart';
-import '../models/scheduled_announcement.dart';
+import '../models/scheduled_notification.dart';
+import '../notification_scheduler.dart';
 
-/// Service class that encapsulates all [AnnouncementScheduler] operations.
+/// Service class that encapsulates all [NotificationScheduler] operations.
 ///
 /// Follows the Service/Repository pattern to separate data access from UI.
 /// This service handles permission requests before initializing the scheduler.
-class AnnouncementService {
-  final AnnouncementScheduler _scheduler;
+class NotificationService {
+  final NotificationScheduler _scheduler;
 
   // Private constructor
-  AnnouncementService._(this._scheduler);
+  NotificationService._(this._scheduler);
 
-  /// Create and initialize the [AnnouncementService].
+  /// Create and initialize the [NotificationService].
   ///
   /// This method will check for notification permissions and request them if needed.
   /// Throws an [Exception] if permissions are not granted.
-  static Future<AnnouncementService> create({
+  static Future<NotificationService> create({
     required AnnouncementConfig config,
   }) async {
     // Check notification permissions first
@@ -34,13 +34,13 @@ class AnnouncementService {
       throw Exception('Notification permission not granted');
     }
 
-    final scheduler = await AnnouncementScheduler.create(config: config);
+    final scheduler = await NotificationScheduler.create(config: config);
 
-    return AnnouncementService._(scheduler);
+    return NotificationService._(scheduler);
   }
 
   /// Stream of status updates from the scheduler.
-  Stream<AnnouncementStatus> get statusStream => _scheduler.statusStream;
+  Stream<NotificationStatus> get statusStream => _scheduler.statusStream;
 
   /// Check and request notification permissions.
   static Future<bool> _checkAndRequestNotificationPermissions() async {
@@ -117,7 +117,7 @@ class AnnouncementService {
   }
 
   /// Get all scheduled announcements.
-  Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
+  Future<List<ScheduledNotification>> getScheduledAnnouncements() async {
     return await _scheduler.getScheduledAnnouncements();
   }
 

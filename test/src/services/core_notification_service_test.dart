@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:announcement_scheduler/announcement_scheduler.dart';
-import 'package:announcement_scheduler/src/services/core_notification_service.dart';
-import 'package:announcement_scheduler/src/services/scheduling_settings_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:notification_scheduler/notification_scheduler.dart';
+import 'package:notification_scheduler/src/services/core_notification_service.dart';
+import 'package:notification_scheduler/src/services/scheduling_settings_service.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import 'core_notification_service_test.mocks.dart';
@@ -21,14 +21,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('CoreNotificationService - onNotificationResponse', () {
-    late StreamController<AnnouncementStatus> statusController;
+    late StreamController<NotificationStatus> statusController;
     late AnnouncementConfig config;
     late MockFlutterTts mockTts;
     late MockSchedulingSettingsService mockSettingsService;
     late CoreNotificationService service;
 
     setUp(() {
-      statusController = StreamController<AnnouncementStatus>.broadcast();
+      statusController = StreamController<NotificationStatus>.broadcast();
       mockTts = MockFlutterTts();
       mockSettingsService = MockSchedulingSettingsService();
       config = const AnnouncementConfig(
@@ -72,7 +72,7 @@ void main() {
         final status = await statusFuture;
         expect(
           status,
-          AnnouncementStatus.completed,
+          NotificationStatus.completed,
           reason: 'Should emit completed status when notification is received',
         );
       },
@@ -237,7 +237,7 @@ void main() {
       final status = await statusFuture;
       expect(
         status,
-        AnnouncementStatus.completed,
+        NotificationStatus.completed,
         reason: 'Should emit completed status regardless of TTS configuration',
       );
       await serviceWithoutTts.dispose();
@@ -269,7 +269,7 @@ void main() {
       when(mockTts.speak(any)).thenAnswer((_) async => 1);
 
       // Act
-      final statusList = <AnnouncementStatus>[];
+      final statusList = <NotificationStatus>[];
       service.statusStream.listen(statusList.add);
 
       for (final response in responses) {
@@ -286,7 +286,7 @@ void main() {
         reason: 'Should emit completed status for each notification',
       );
       expect(
-        statusList.every((s) => s == AnnouncementStatus.completed),
+        statusList.every((s) => s == NotificationStatus.completed),
         true,
         reason: 'All statuses should be completed',
       );
@@ -517,7 +517,7 @@ void main() {
           config: config,
         );
 
-        final announcement = ScheduledAnnouncement(
+        final announcement = ScheduledNotification(
           id: 1,
           content: 'Morning reminder',
           scheduledTime: DateTime.now().add(const Duration(hours: 1)),
@@ -525,7 +525,7 @@ void main() {
           recurrence: RecurrencePattern.daily,
         );
 
-        final existingAnnouncements = <ScheduledAnnouncement>[];
+        final existingAnnouncements = <ScheduledNotification>[];
 
         await service.validateSchedulingLimits(
           announcement,
@@ -553,7 +553,7 @@ void main() {
           config: config,
         );
 
-        final announcement = ScheduledAnnouncement(
+        final announcement = ScheduledNotification(
           id: 2,
           content: 'Afternoon reminder',
           scheduledTime: DateTime(2025, 11, 20, 14, 0),
@@ -564,31 +564,31 @@ void main() {
         // 4 existing announcements on the same day + 1 on a different day
         final sameDay = DateTime(2025, 11, 20, 9, 0);
         final existingAnnouncements = [
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 0,
             content: 'Existing 0',
             scheduledTime: sameDay,
             isActive: true,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 1,
             content: 'Existing 1',
             scheduledTime: sameDay.add(const Duration(hours: 1)),
             isActive: true,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 2,
             content: 'Existing 2',
             scheduledTime: sameDay.add(const Duration(hours: 2)),
             isActive: true,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 3,
             content: 'Existing 3',
             scheduledTime: sameDay.add(const Duration(hours: 3)),
             isActive: true,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 4,
             content: 'Existing 4',
             scheduledTime: sameDay.add(const Duration(days: 1)),
@@ -622,7 +622,7 @@ void main() {
           config: config,
         );
 
-        final announcement = ScheduledAnnouncement(
+        final announcement = ScheduledNotification(
           id: 3,
           content: 'Weekly reminder',
           scheduledTime: DateTime.now().add(const Duration(days: 7)),
@@ -633,7 +633,7 @@ void main() {
         // 49 existing announcements across various days
         final existingAnnouncements = List.generate(
           49,
-          (i) => ScheduledAnnouncement(
+          (i) => ScheduledNotification(
             id: i,
             content: 'Announcement $i',
             scheduledTime: DateTime.now().add(Duration(days: i)),
@@ -669,7 +669,7 @@ void main() {
           config: config,
         );
 
-        final announcement = ScheduledAnnouncement(
+        final announcement = ScheduledNotification(
           id: 4,
           content: 'One too many',
           scheduledTime: DateTime(2025, 11, 20, 16, 0),
@@ -680,19 +680,19 @@ void main() {
         // 3 announcements already scheduled for the same day
         final sameDay = DateTime(2025, 11, 20, 9, 0);
         final existingAnnouncements = [
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 0,
             content: 'Existing 0',
             scheduledTime: sameDay,
             isActive: true,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 1,
             content: 'Existing 1',
             scheduledTime: sameDay.add(const Duration(hours: 2)),
             isActive: true,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 2,
             content: 'Existing 2',
             scheduledTime: sameDay.add(const Duration(hours: 4)),
@@ -722,7 +722,7 @@ void main() {
           config: config,
         );
 
-        final announcement = ScheduledAnnouncement(
+        final announcement = ScheduledNotification(
           id: 5,
           content: 'Too many total',
           scheduledTime: DateTime.now().add(const Duration(days: 30)),
@@ -733,7 +733,7 @@ void main() {
         // 50 announcements already scheduled
         final existingAnnouncements = List.generate(
           50,
-          (i) => ScheduledAnnouncement(
+          (i) => ScheduledNotification(
             id: i,
             content: 'Announcement $i',
             scheduledTime: DateTime.now().add(Duration(days: i)),

@@ -4,14 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:notification_scheduler/src/models/notification_status.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../models/announcement_config.dart';
 import '../models/announcement_exceptions.dart';
-import '../models/announcement_status.dart';
 import '../models/recurrence_pattern.dart';
-import '../models/scheduled_announcement.dart';
+import '../models/scheduled_notification.dart';
 import 'scheduling_settings_service.dart';
 
 /// Core notification service for the announcement scheduler package.
@@ -52,11 +52,11 @@ class CoreNotificationService {
   final List<Timer> _activeAnnouncementTimers = [];
 
   // Stream controller for status updates
-  final StreamController<AnnouncementStatus> _statusController =
-      StreamController<AnnouncementStatus>.broadcast();
+  final StreamController<NotificationStatus> _statusController =
+      StreamController<NotificationStatus>.broadcast();
 
   // Cleanup listener subscription
-  StreamSubscription<AnnouncementStatus>? _cleanupSubscription;
+  StreamSubscription<NotificationStatus>? _cleanupSubscription;
 
   CoreNotificationService({
     required SchedulingSettingsService settingsService,
@@ -76,7 +76,7 @@ class CoreNotificationService {
       _exactAlarmsAllowed && _notificationAllowed;
 
   /// Stream of announcement status updates
-  Stream<AnnouncementStatus> get statusStream => _statusController.stream;
+  Stream<NotificationStatus> get statusStream => _statusController.stream;
 
   /// Initialize the notification service
   Future<void> initialize() async {
@@ -115,7 +115,7 @@ class CoreNotificationService {
     );
 
     if (initialized != true) {
-      throw const NotificationInitializationException(
+      throw NotificationInitializationException(
         'Failed to initialize notifications',
       );
     }
@@ -136,7 +136,7 @@ class CoreNotificationService {
     Map<String, dynamic>? metadata,
   }) async {
     try {
-      _statusController.add(AnnouncementStatus.scheduled);
+      _statusController.add(NotificationStatus.scheduled);
 
       tz.initializeTimeZones();
       if (_config.forceTimezone && _config.timezoneLocation != null) {
@@ -162,7 +162,7 @@ class CoreNotificationService {
       }
 
       // Create the announcement object
-      final announcement = ScheduledAnnouncement(
+      final announcement = ScheduledNotification(
         id: announcementId,
         content: content,
         scheduledTime: dateTime,
@@ -197,7 +197,7 @@ class CoreNotificationService {
 
       return announcementId;
     } catch (e) {
-      _statusController.add(AnnouncementStatus.failed);
+      _statusController.add(NotificationStatus.failed);
       debugPrint(
         '[CoreNotificationService] scheduleOneTimeAnnouncement: Error scheduling announcement: $e',
       );
@@ -230,7 +230,7 @@ class CoreNotificationService {
     final announcementId = _generateId(id);
 
     await validateSchedulingLimits(
-      ScheduledAnnouncement(
+      ScheduledNotification(
         id: announcementId,
         content: content,
         scheduledTime: DateTime.now(), // Placeholder for validation
@@ -241,7 +241,7 @@ class CoreNotificationService {
     );
 
     try {
-      _statusController.add(AnnouncementStatus.scheduled);
+      _statusController.add(NotificationStatus.scheduled);
 
       // Store the announcement settings (keep for default time)
       await _settingsService.setAnnouncementTime(
@@ -259,7 +259,7 @@ class CoreNotificationService {
         announcementTime.minute,
       );
 
-      final announcement = ScheduledAnnouncement(
+      final announcement = ScheduledNotification(
         id: announcementId,
         content: content,
         scheduledTime: scheduledTime,
@@ -287,7 +287,7 @@ class CoreNotificationService {
 
       return announcementId;
     } catch (e) {
-      _statusController.add(AnnouncementStatus.failed);
+      _statusController.add(NotificationStatus.failed);
       throw NotificationSchedulingException(
         'Failed to schedule recurring announcement: $e',
       );
@@ -325,8 +325,8 @@ class CoreNotificationService {
   /// ```
   @visibleForTesting
   Future<void> validateSchedulingLimits(
-    ScheduledAnnouncement announcement,
-    List<ScheduledAnnouncement> existingAnnouncements,
+    ScheduledNotification announcement,
+    List<ScheduledNotification> existingAnnouncements,
   ) async {
     // Check total scheduled notifications limit
     final totalScheduled = existingAnnouncements.length;
@@ -407,10 +407,10 @@ class CoreNotificationService {
   /// the scheduled DateTime. This method retrieves scheduled times from persistent
   /// storage ([SchedulingSettingsService]) where they are saved during scheduling.
   ///
-  /// Returns a list of [ScheduledAnnouncement] objects with accurate scheduled times.
+  /// Returns a list of [ScheduledNotification] objects with accurate scheduled times.
   /// If a notification exists in the system but has no stored time (edge case),
   /// it defaults to the current time.
-  Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
+  Future<List<ScheduledNotification>> getScheduledAnnouncements() async {
     return _reconcileAnnouncements();
   }
 
@@ -422,7 +422,7 @@ class CoreNotificationService {
   /// 3. Filtering stored announcements to keep only those that are still pending
   /// 4. Cleaning up stale announcements from storage
   /// 5. Returning the list of active, sorted announcements
-  Future<List<ScheduledAnnouncement>> _reconcileAnnouncements() async {
+  Future<List<ScheduledNotification>> _reconcileAnnouncements() async {
     try {
       // Get stored definitions
       final storedAnnouncements = await _settingsService
@@ -433,7 +433,7 @@ class CoreNotificationService {
           .pendingNotificationRequests();
       final pendingIds = pendingNotifications.map((n) => n.id).toSet();
 
-      final activeAnnouncements = <ScheduledAnnouncement>[];
+      final activeAnnouncements = <ScheduledNotification>[];
       final staleIds = <int>[];
       final matchedPendingIds = <int>{};
 
@@ -484,7 +484,7 @@ class CoreNotificationService {
 
   /// Check if an announcement is still active in pending notifications
   bool _isAnnouncementActive(
-    ScheduledAnnouncement announcement,
+    ScheduledNotification announcement,
     Set<int> pendingIds,
     Set<int> matchedPendingIds,
   ) {
@@ -550,7 +550,7 @@ class CoreNotificationService {
         );
       }
 
-      if (status == AnnouncementStatus.completed) {
+      if (status == NotificationStatus.completed) {
         if (_config.enableDebugLogging) {
           debugPrint(
             '[CoreNotificationService] _setupCleanupListener: Status is completed, triggering cleanup',
@@ -651,7 +651,7 @@ class CoreNotificationService {
     final minute = await _settingsService.getAnnouncementMinute();
 
     if (hour == null || minute == null) {
-      throw const NotificationSchedulingException('Announcement time not set');
+      throw NotificationSchedulingException('Announcement time not set');
     }
 
     tz.initializeTimeZones();
@@ -699,7 +699,7 @@ class CoreNotificationService {
     final minute = await _settingsService.getAnnouncementMinute();
 
     if (hour == null || minute == null) {
-      throw const NotificationSchedulingException('Announcement time not set');
+      throw NotificationSchedulingException('Announcement time not set');
     }
 
     // Validate recurring settings
@@ -988,10 +988,10 @@ class CoreNotificationService {
 
     final timer = Timer(delay, () async {
       try {
-        _statusController.add(AnnouncementStatus.delivering);
+        _statusController.add(NotificationStatus.delivering);
         await _tts!.speak(content);
       } catch (e) {
-        _statusController.add(AnnouncementStatus.failed);
+        _statusController.add(NotificationStatus.failed);
       }
     });
 
@@ -1008,12 +1008,12 @@ class CoreNotificationService {
       switch (pattern) {
         case RecurrencePattern.custom:
           if (customDays.isEmpty) {
-            throw const ValidationException(
+            throw ValidationException(
               'Custom recurrence pattern requires at least one day to be selected',
             );
           }
           if (customDays.length > 7) {
-            throw const ValidationException(
+            throw ValidationException(
               'Custom recurrence pattern cannot have more than 7 days',
             );
           }
@@ -1021,7 +1021,7 @@ class CoreNotificationService {
         case RecurrencePattern.daily:
           // Daily is always valid, but check against max notifications
           if (_config.validationConfig.maxNotificationsPerDay < 1) {
-            throw const ValidationException(
+            throw ValidationException(
               'Daily notifications require at least 1 notification per day',
             );
           }
@@ -1100,7 +1100,7 @@ class CoreNotificationService {
     }
 
     // Emit completed status to trigger cleanup via listener
-    _statusController.add(AnnouncementStatus.completed);
+    _statusController.add(NotificationStatus.completed);
 
     if (_config.enableDebugLogging) {
       debugPrint(

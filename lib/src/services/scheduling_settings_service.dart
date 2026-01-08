@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/scheduled_announcement.dart';
+import '../models/scheduled_notification.dart';
 import 'storage_service.dart';
 
 /// Service for managing announcement scheduling settings within the package.
@@ -35,18 +35,18 @@ class SchedulingSettingsService {
   /// Returns an empty list if no announcements are stored or if
   /// deserialization fails. Handles deserialization errors gracefully
   /// by logging and skipping invalid entries.
-  Future<List<ScheduledAnnouncement>> getScheduledAnnouncements() async {
+  Future<List<ScheduledNotification>> getScheduledAnnouncements() async {
     try {
       final data = await _storage.get<List<dynamic>>('scheduledAnnouncements');
       if (data == null) return [];
 
-      final announcements = <ScheduledAnnouncement>[];
+      final announcements = <ScheduledNotification>[];
       for (final item in data) {
         try {
           if (item is Map<dynamic, dynamic>) {
             // Convert to Map<String, dynamic> for fromJson
             final jsonMap = Map<String, dynamic>.from(item);
-            announcements.add(ScheduledAnnouncement.fromJson(jsonMap));
+            announcements.add(ScheduledNotification.fromJson(jsonMap));
           }
         } catch (e) {
           // Skip invalid entries, continue processing others
@@ -63,10 +63,10 @@ class SchedulingSettingsService {
 
   /// Persists a list of scheduled announcements to storage
   ///
-  /// Serializes each [ScheduledAnnouncement] to JSON and stores the
+  /// Serializes each [ScheduledNotification] to JSON and stores the
   /// resulting list. Replaces any previously stored announcements.
   Future<void> setScheduledAnnouncements(
-    List<ScheduledAnnouncement> announcements,
+    List<ScheduledNotification> announcements,
   ) async {
     final jsonList = announcements.map((a) => a.toJson()).toList();
     await _storage.set('scheduledAnnouncements', jsonList);
@@ -78,7 +78,7 @@ class SchedulingSettingsService {
   /// stores the updated list. This is more efficient than loading
   /// and replacing the entire list externally.
   Future<void> addScheduledAnnouncement(
-    ScheduledAnnouncement announcement,
+    ScheduledNotification announcement,
   ) async {
     final currentAnnouncements = await getScheduledAnnouncements();
     currentAnnouncements.add(announcement);

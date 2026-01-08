@@ -1,5 +1,5 @@
-import 'package:announcement_scheduler/announcement_scheduler.dart';
 import 'package:flutter/material.dart';
+import 'package:notification_scheduler/notification_scheduler.dart';
 
 /// Utility class for showing user feedback messages
 /// Follows the Strategy pattern for different types of user notifications
@@ -34,7 +34,7 @@ class FeedbackHelper {
   /// Show a dialog with scheduled announcements
   static Future<void> showScheduledAnnouncementsDialog(
     BuildContext context,
-    List<ScheduledAnnouncement> announcements,
+    List<ScheduledNotification> announcements,
   ) async {
     if (!context.mounted) return;
 

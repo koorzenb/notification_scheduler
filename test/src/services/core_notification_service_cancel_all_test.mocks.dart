@@ -6,10 +6,6 @@
 import 'dart:async' as _i4;
 import 'dart:ui' as _i11;
 
-import 'package:announcement_scheduler/src/models/scheduled_announcement.dart'
-    as _i14;
-import 'package:announcement_scheduler/src/services/scheduling_settings_service.dart'
-    as _i13;
 import 'package:flutter/services.dart' as _i12;
 import 'package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart'
     as _i3;
@@ -24,6 +20,10 @@ import 'package:flutter_local_notifications_platform_interface/flutter_local_not
     as _i6;
 import 'package:flutter_tts/flutter_tts.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:notification_scheduler/src/models/scheduled_notification.dart'
+    as _i14;
+import 'package:notification_scheduler/src/services/scheduling_settings_service.dart'
+    as _i13;
 import 'package:timezone/timezone.dart' as _i8;
 
 // ignore_for_file: type=lint
@@ -626,18 +626,18 @@ class MockSchedulingSettingsService extends _i1.Mock
           as _i4.Future<void>);
 
   @override
-  _i4.Future<List<_i14.ScheduledAnnouncement>> getScheduledAnnouncements() =>
+  _i4.Future<List<_i14.ScheduledNotification>> getScheduledAnnouncements() =>
       (super.noSuchMethod(
             Invocation.method(#getScheduledAnnouncements, []),
-            returnValue: _i4.Future<List<_i14.ScheduledAnnouncement>>.value(
-              <_i14.ScheduledAnnouncement>[],
+            returnValue: _i4.Future<List<_i14.ScheduledNotification>>.value(
+              <_i14.ScheduledNotification>[],
             ),
           )
-          as _i4.Future<List<_i14.ScheduledAnnouncement>>);
+          as _i4.Future<List<_i14.ScheduledNotification>>);
 
   @override
   _i4.Future<void> setScheduledAnnouncements(
-    List<_i14.ScheduledAnnouncement>? announcements,
+    List<_i14.ScheduledNotification>? announcements,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#setScheduledAnnouncements, [announcements]),
@@ -648,7 +648,7 @@ class MockSchedulingSettingsService extends _i1.Mock
 
   @override
   _i4.Future<void> addScheduledAnnouncement(
-    _i14.ScheduledAnnouncement? announcement,
+    _i14.ScheduledNotification? announcement,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#addScheduledAnnouncement, [announcement]),

@@ -1,8 +1,8 @@
-import 'package:announcement_scheduler/src/services/scheduling_settings_service.dart';
-import 'package:announcement_scheduler/src/services/storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:notification_scheduler/src/services/scheduling_settings_service.dart';
+import 'package:notification_scheduler/src/services/storage_service.dart';
 
 import 'scheduling_settings_service_clear_test.mocks.dart';
 

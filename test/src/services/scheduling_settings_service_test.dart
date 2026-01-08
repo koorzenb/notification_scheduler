@@ -1,8 +1,8 @@
-import 'package:announcement_scheduler/src/models/recurrence_pattern.dart';
-import 'package:announcement_scheduler/src/models/scheduled_announcement.dart';
-import 'package:announcement_scheduler/src/services/scheduling_settings_service.dart';
-import 'package:announcement_scheduler/src/services/storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notification_scheduler/src/models/recurrence_pattern.dart';
+import 'package:notification_scheduler/src/models/scheduled_notification.dart';
+import 'package:notification_scheduler/src/services/scheduling_settings_service.dart';
+import 'package:notification_scheduler/src/services/storage_service.dart';
 
 /// Mock implementation of IStorageService for testing
 class MockStorageService implements IStorageService {
@@ -81,14 +81,14 @@ void main() {
 
       test('returns list of stored announcements', () async {
         // Arrange
-        final expectedAnnouncements = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final expectedAnnouncements = <ScheduledNotification>[
+          ScheduledNotification(
             id: 1,
             content: 'Test content',
             scheduledTime: DateTime(2024, 1, 15, 9, 0),
             recurrence: RecurrencePattern.daily,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 2,
             content: 'Test content 2',
             scheduledTime: DateTime(2024, 1, 16, 10, 0),
@@ -124,8 +124,8 @@ void main() {
     group('setScheduledAnnouncements', () {
       test('stores list of announcements correctly', () async {
         // Arrange
-        final announcements = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final announcements = <ScheduledNotification>[
+          ScheduledNotification(
             id: 101,
             content: 'Set content',
             scheduledTime: DateTime(2024, 2, 1, 12, 0),
@@ -152,8 +152,8 @@ void main() {
 
       test('overwrites existing announcements', () async {
         // Arrange
-        final firstList = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final firstList = <ScheduledNotification>[
+          ScheduledNotification(
             id: 201,
             content: 'Old content',
             scheduledTime: DateTime(2024, 1, 1),
@@ -161,8 +161,8 @@ void main() {
           ),
         ];
 
-        final secondList = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final secondList = <ScheduledNotification>[
+          ScheduledNotification(
             id: 202,
             content: 'New content',
             scheduledTime: DateTime(2024, 2, 1),
@@ -193,7 +193,7 @@ void main() {
     group('addScheduledAnnouncement', () {
       test('adds announcement to empty list', () async {
         // Arrange
-        final announcement = ScheduledAnnouncement(
+        final announcement = ScheduledNotification(
           id: 301,
           content: 'Added content',
           scheduledTime: DateTime(2024, 3, 1, 14, 30),
@@ -219,13 +219,13 @@ void main() {
 
       test('adds announcement to existing list', () async {
         // Arrange
-        final existingAnnouncement = ScheduledAnnouncement(
+        final existingAnnouncement = ScheduledNotification(
           id: 401,
           content: 'Existing content',
           scheduledTime: DateTime(2024, 1, 1),
         );
 
-        final newAnnouncement = ScheduledAnnouncement(
+        final newAnnouncement = ScheduledNotification(
           id: 402,
           content: 'New content',
           scheduledTime: DateTime(2024, 2, 1),
@@ -263,19 +263,19 @@ void main() {
     group('removeScheduledAnnouncement', () {
       test('removes announcement with matching ID', () async {
         // Arrange
-        final announcements = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final announcements = <ScheduledNotification>[
+          ScheduledNotification(
             id: 501,
             content: 'Keep content',
             scheduledTime: DateTime(2024, 1, 1),
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 502,
             content: 'Remove content',
             scheduledTime: DateTime(2024, 2, 1),
             recurrence: RecurrencePattern.daily,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 503,
             content: 'Keep content 2',
             scheduledTime: DateTime(2024, 3, 1),
@@ -317,8 +317,8 @@ void main() {
 
       test('does nothing when ID not found', () async {
         // Arrange
-        final announcements = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final announcements = <ScheduledNotification>[
+          ScheduledNotification(
             id: 601,
             content: 'Existing content',
             scheduledTime: DateTime(2024, 1, 1),
@@ -362,26 +362,26 @@ void main() {
     group('removeScheduledAnnouncements (bulk removal)', () {
       test('removes multiple announcements by IDs', () async {
         // Arrange
-        final announcements = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final announcements = <ScheduledNotification>[
+          ScheduledNotification(
             id: 701,
             content: 'Keep content',
             scheduledTime: DateTime(2024, 1, 1),
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 702,
             content: 'Remove content',
             scheduledTime: DateTime(2024, 2, 1),
             recurrence: RecurrencePattern.daily,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 703,
             content: 'Keep content 2',
             scheduledTime: DateTime(2024, 3, 1),
             recurrence: RecurrencePattern.weekends,
             isActive: false,
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 704,
             content: 'Remove content 2',
             scheduledTime: DateTime(2024, 4, 1),
@@ -428,13 +428,13 @@ void main() {
 
       test('handles mixed existing and non-existing IDs', () async {
         // Arrange
-        final announcements = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final announcements = <ScheduledNotification>[
+          ScheduledNotification(
             id: 801,
             content: 'Existing content',
             scheduledTime: DateTime(2024, 1, 1),
           ),
-          ScheduledAnnouncement(
+          ScheduledNotification(
             id: 802,
             content: 'Existing content 2',
             scheduledTime: DateTime(2024, 2, 1),
@@ -465,8 +465,8 @@ void main() {
 
       test('handles empty removal list', () async {
         // Arrange
-        final announcements = <ScheduledAnnouncement>[
-          ScheduledAnnouncement(
+        final announcements = <ScheduledNotification>[
+          ScheduledNotification(
             id: 901,
             content: 'Keep content',
             scheduledTime: DateTime(2024, 1, 1),
