@@ -1,8 +1,6 @@
 import 'package:announcement_scheduler/announcement_scheduler.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../services/announcement_service.dart';
 
 /// Controller/ViewModel that manages the business logic and state for the example page
 /// Uses GetX for reactive state management following the GetX pattern
@@ -77,12 +75,36 @@ class ExamplePageController extends GetxController {
     if (_announcementService == null) return false;
 
     try {
-      await _announcementService!.scheduleExampleAnnouncements();
+      await _scheduleExampleAnnouncements();
       return true;
     } catch (e) {
       _errorMessage.value = 'Failed to schedule announcements: $e';
       return false;
     }
+  }
+
+  Future<void> _scheduleExampleAnnouncements() async {
+    final now = DateTime.now();
+
+    // Schedule a one-time announcement 1 minute from now
+    await _announcementService!.scheduleOnceOff(
+      content: 'This is a one-time announcement 5 seconds ago.',
+      dateTime: now.add(const Duration(seconds: 5)),
+      metadata: {'type': 'one-time'},
+    );
+
+    await _announcementService!.scheduleDaily(
+      content: 'Good morning! This is your daily announcement at 9:00 AM.',
+      time: const TimeOfDay(hour: 9, minute: 0),
+      metadata: {'type': 'daily'},
+    );
+
+    await _announcementService!.scheduleWeekly(
+      content: 'Happy Odd Day! This is your weekly announcement at 5:00 PM.',
+      time: const TimeOfDay(hour: 17, minute: 0),
+      weekdays: [1, 3, 5, 7], // Odd days
+      metadata: {'type': 'weekly'},
+    );
   }
 
   /// Cancel all announcements
