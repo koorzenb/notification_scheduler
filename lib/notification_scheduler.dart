@@ -1,27 +1,27 @@
-/// A Flutter package for scheduling text-to-speech announcements.
+/// A Flutter package for scheduling text-to-speech notifications.
 ///
 /// This package provides a simple API for scheduling both one-time and
-/// recurring text-to-speech announcements using local notifications.
+/// recurring text-to-speech notifications using local notifications.
 /// It supports various recurrence patterns including daily, weekdays,
 /// weekends, and custom day selections.
 ///
 /// Example usage:
 /// ```dart
-/// import 'package:notification_scheduler/announcement_scheduler.dart';
+/// import 'package:notification_scheduler/notification_scheduler.dart';
 ///
-/// final scheduler = await AnnouncementScheduler.create(
-///   config: AnnouncementConfig(
+/// final scheduler = await notificationScheduler.create(
+///   config: notificationConfig(
 ///     notificationConfig: NotificationConfig(
-///       channelId: 'my_announcements',
-///       channelName: 'My Announcements',
-///       channelDescription: 'Scheduled text-to-speech announcements',
+///       channelId: 'my_notifications',
+///       channelName: 'My notifications',
+///       channelDescription: 'Scheduled text-to-speech notifications',
 ///     ),
 ///   ),
 /// );
 ///
-/// await scheduler.scheduleAnnouncement(
+/// await scheduler.scheduleNotification(
 ///   content: 'Good morning! Time for your daily reminder.',
-///   announcementTime: TimeOfDay(hour: 8, minute: 0),
+///   notificationTime: TimeOfDay(hour: 8, minute: 0),
 ///   recurrence: RecurrencePattern.daily,
 /// );
 /// ```

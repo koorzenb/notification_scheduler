@@ -1,12 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic
-  Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [0.1.0] - 2025-10-15
+## [1.0.0] - 2026-01-08
 
 ### Added
 
@@ -24,10 +18,10 @@ and this project adheres to [Semantic
 
 ### Features
 
-- `AnnouncementScheduler` - Main entry point for package functionality
-- `AnnouncementConfig` - Configuration class for TTS and notification settings
+- `NotificationScheduler` - Main entry point for package functionality
+- `NotificationConfig` - Configuration class for TTS and notification settings
 - `RecurrencePattern` - Enum for different recurring patterns
-- `ScheduledAnnouncement` - Model for scheduled announcement data
+- `ScheduledNotification` - Model for scheduled notification data
 - `NotificationConfig` - Configuration for notification channels and behavior
 - `ValidationConfig` - Configuration for scheduling limits and validation
 - Custom exceptions for different error scenarios

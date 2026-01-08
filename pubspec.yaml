@@ -1,7 +1,6 @@
 name: notification_scheduler
 description: A Flutter package for scheduling text-to-speech announcements with support for one-time and recurring notifications.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 0.1.0
+version: 1.0.0
 homepage: https://github.com/koorzenb/notification_scheduler
 repository: https://github.com/koorzenb/notification_scheduler
 issue_tracker: https://github.com/koorzenb/notification_scheduler/issues
@@ -18,14 +17,16 @@ dependencies:
   timezone: ^0.10.1
   hive_flutter: ^1.1.0
   get: ^4.6.6
-  permission_handler: 12.0.1
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
-  mockito: ^5.4.4
   build_runner: ^2.4.11
+  flutter_lints: ^6.0.0
+  flutter_local_notifications_platform_interface: ^9.1.0
+  mockito: ^5.4.4
+  pub_semver: ^2.2.0
 
 topics:
   - notifications
