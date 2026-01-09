@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 /// For a more advanced example using GetX architecture, see:
 /// - pages/example_home_page.dart
 /// - controllers/example_page_controller.dart
+///
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -76,86 +77,6 @@ class _SimpleExamplePageState extends State<SimpleExamplePage> {
   void dispose() {
     widget.service.dispose();
     super.dispose();
-  }
-
-  /// Schedule example announcements
-  Future<void> _scheduleExamples() async {
-    try {
-      final now = DateTime.now();
-
-      // Example 1: One-time announcement 5 seconds from now
-      await widget.service.scheduleOnceOff(
-        content: 'This is a one-time announcement from 5 seconds ago.',
-        dateTime: now.add(const Duration(seconds: 5)),
-        metadata: {'type': 'one-time'},
-      );
-
-      // Example 2: Daily announcement at 9:00 AM
-      await widget.service.scheduleDaily(
-        content: 'Good morning! This is your daily announcement at 9:00 AM.',
-        time: const TimeOfDay(hour: 9, minute: 0),
-        metadata: {'type': 'daily'},
-      );
-
-      // Example 3: Weekly announcement on odd days at 5:00 PM
-      await widget.service.scheduleWeekly(
-        content: 'Happy Odd Day! This is your weekly announcement at 5:00 PM.',
-        time: const TimeOfDay(hour: 17, minute: 0),
-        weekdays: [1, 3, 5, 7], // Monday, Wednesday, Friday, Sunday
-        metadata: {'type': 'weekly'},
-      );
-
-      setState(() {
-        _statusMessage = 'Successfully scheduled 3 announcements!';
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Announcements scheduled!')),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _statusMessage = 'Error: $e';
-      });
-    }
-  }
-
-  /// View all scheduled announcements
-  Future<void> _viewScheduled() async {
-    try {
-      final announcements = await widget.service.getScheduledAnnouncements();
-      setState(() {
-        _scheduledAnnouncements = announcements;
-        _statusMessage =
-            'Found ${announcements.length} scheduled announcement(s)';
-      });
-    } catch (e) {
-      setState(() {
-        _statusMessage = 'Error loading announcements: $e';
-      });
-    }
-  }
-
-  /// Cancel all announcements
-  Future<void> _cancelAll() async {
-    try {
-      await widget.service.cancelAllAnnouncements();
-      setState(() {
-        _scheduledAnnouncements = [];
-        _statusMessage = 'All announcements cancelled';
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All announcements cancelled')),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _statusMessage = 'Error cancelling announcements: $e';
-      });
-    }
   }
 
   @override
@@ -271,5 +192,85 @@ class _SimpleExamplePageState extends State<SimpleExamplePage> {
         ),
       ),
     );
+  }
+
+  /// Schedule example announcements
+  Future<void> _scheduleExamples() async {
+    try {
+      final now = DateTime.now();
+
+      // Example 1: One-time announcement 5 seconds from now
+      await widget.service.scheduleOnceOff(
+        content: 'This is a one-time announcement from 5 seconds ago.',
+        dateTime: now.add(const Duration(seconds: 5)),
+        metadata: {'type': 'one-time'},
+      );
+
+      // Example 2: Daily announcement at 9:00 AM
+      await widget.service.scheduleDaily(
+        content: 'Good morning! This is your daily announcement at 9:00 AM.',
+        time: const TimeOfDay(hour: 9, minute: 0),
+        metadata: {'type': 'daily'},
+      );
+
+      // Example 3: Weekly announcement on odd days at 5:00 PM
+      await widget.service.scheduleWeekly(
+        content: 'Happy Odd Day! This is your weekly announcement at 5:00 PM.',
+        time: const TimeOfDay(hour: 17, minute: 0),
+        weekdays: [1, 3, 5, 7], // Monday, Wednesday, Friday, Sunday
+        metadata: {'type': 'weekly'},
+      );
+
+      setState(() {
+        _statusMessage = 'Successfully scheduled 3 announcements!';
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Announcements scheduled!')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error: $e';
+      });
+    }
+  }
+
+  /// View all scheduled announcements
+  Future<void> _viewScheduled() async {
+    try {
+      final announcements = await widget.service.getScheduledAnnouncements();
+      setState(() {
+        _scheduledAnnouncements = announcements;
+        _statusMessage =
+            'Found ${announcements.length} scheduled announcement(s)';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error loading announcements: $e';
+      });
+    }
+  }
+
+  /// Cancel all announcements
+  Future<void> _cancelAll() async {
+    try {
+      await widget.service.cancelAllAnnouncements();
+      setState(() {
+        _scheduledAnnouncements = [];
+        _statusMessage = 'All announcements cancelled';
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All announcements cancelled')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error cancelling announcements: $e';
+      });
+    }
   }
 }

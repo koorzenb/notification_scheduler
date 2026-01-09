@@ -3,6 +3,13 @@
 
 
 
+
+## [1.0.3] - 2026-01-08
+  
+### Chore
+  
+- Update dependencies and version in pubspec.yaml and pubspec.lock
+
 ## [1.0.2] - 2026-01-08
   
 ### Enhancement
