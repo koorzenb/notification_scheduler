@@ -4,6 +4,13 @@
 
 
 
+
+## [1.1.0] - 2026-01-13
+  
+### Docs
+  
+- Add contributing guidelines and platform setup instructions to README.md and main.dart
+
 ## [1.0.3] - 2026-01-08
   
 ### Chore

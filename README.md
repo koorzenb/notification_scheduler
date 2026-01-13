@@ -21,7 +21,7 @@ Add this package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  announcement_scheduler: ^1.0.3
+  announcement_scheduler: ^1.1.0
 ```
 
 Then run:
@@ -35,6 +35,8 @@ flutter pub get
 The recommended way to use this package is by creating a dedicated service to manage initialization and scheduling. This ensures proper handling of permissions and configuration.
 
 ### 1. Initialize in Main
+
+See [Platform Setup](#platform-setup) below for necessary Android configuration.
 
 ```dart
 void main() async {
@@ -218,29 +220,56 @@ This package is perfect for:
 Add permissions to `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
-<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-<uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> 
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" /> 
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" /> 
+    <application>
+      <!-- Other application content -->
+      
+      <!-- Required receivers for flutter_local_notifications -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
+    </application>
 ```
 
 Add receivers within the `<application>` tag:
 
 ```xml
-<receiver android:exported="false" android:name="com.dexterous.
-flutterlocalnotifications.ScheduledNotificationReceiver" />
-<receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
-    <intent-filter>
-        <action android:name="android.intent.action.BOOT_COMPLETED"/>
-        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-        <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-        <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
-    </intent-filter>
-</receiver>
+
 ```
+
+#### Core Library Desugaring
+
+To support Java 8+ time APIs on older Android versions (API < 26), enable core library desugaring in `android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true  // Add this line
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")  // Add this dependency
+}
+```
+
+This is required because `flutter_local_notifications` uses modern Java time APIs that aren't available natively on Android versions below 8.0. Without desugaring, the app will crash on older devices.
 
 ### iOS
 
-No additional setup required. Permissions are requested automatically.
+Not supported at this time. Contributions welcome!
 
 ## Managing Announcements
 
@@ -301,8 +330,8 @@ This project is licensed under the MIT License - see the
 If you have questions or need help, please:
 
 1. Check the [documentation](https://pub.dev/packages/announcement_scheduler)
-2. Search [existing issues](https://github.com/koorzenb/day_break/issues)
-3. Create a [new issue](https://github.com/koorzenb/day_break/issues/new) if
+2. Search [existing issues](https://github.com/koorzenb/announcement_scheduler/issues)
+3. Create a [new issue](https://github.com/koorzenb/announcement_scheduler/issues/new) if
   needed
 
 ## Changelog
