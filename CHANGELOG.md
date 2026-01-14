@@ -5,6 +5,13 @@
 
 
 
+
+## [1.2.0] - 2026-01-14
+  
+### Docs
+  
+- Improved visibility of platform setup reminder
+
 ## [1.1.0] - 2026-01-13
   
 ### Docs

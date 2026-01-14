@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 /// - pages/example_home_page.dart
 /// - controllers/example_page_controller.dart
 ///
-/// IMPORTANT: see README.md#platform-setup for necessary platform setup!
+///💡 **IMPORTANT:** see README.md#platform-setup for necessary platform setup!
+///
 ///
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -21,7 +21,7 @@ Add this package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  announcement_scheduler: ^1.1.0
+  announcement_scheduler: ^1.2.0
 ```
 
 Then run:
@@ -36,9 +36,11 @@ The recommended way to use this package is by creating a dedicated service to ma
 
 ### 1. Initialize in Main
 
-See [Platform Setup](#platform-setup) below for necessary Android configuration.
+> 💡 **IMPORTANT:** See [Platform Setup](#platform-setup) below for necessary Android configuration.
 
 ```dart
+import 'package:flutter/material.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
